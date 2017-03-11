@@ -4,9 +4,23 @@ from flaskr import app
 
 
 def render_page(html_file_name, css_file):
+
+    tabs = [
+        ('Index', '/'),
+        ('Manual Grant Submission', '/manual_grant'),
+        ('Grant Search', '/grant_search'),
+        ('Faculty Search', '/faculty_search')
+    ]
+    tabs_d = []
+    for tab in tabs:
+        tabs_d.append({'name':tab[0], 'route':tab[1]})
+
+
+
     return render_template('page_template.html',
+                           tabs_d=tabs_d,
                            main_content=render_template(html_file_name),
-                           css_file=url_for('static', filename=css_file))
+                           css_file=url_for('static', filename='css/{}'.format(css_file)))
 
 @app.route('/')
 def show_index():

@@ -4,6 +4,9 @@
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
 
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -14,7 +17,7 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 
-<link rel=stylesheet type=text/css href="{{ url_for('static', filename='page.css') }}">
+<link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/page.css') }}">
 
 <link rel=stylesheet type=text/css href="{{ css_file }}">
 
@@ -28,10 +31,14 @@
 
 <div class="container">
     <div class="row" id="main-row">
-        <div class="col-md-2" id="nav-sidebar">
-
+        <div id="nav-sidebar">
+            <ul id="nav-sidebar-ul" class="sidebar-nav">
+            {% for tab in tabs_d %}
+                <li><a class="sidebar-a" href="{{tab.route}}">{{ tab.name }}</a></li>
+            {% endfor %}
+            </ul>
         </div>
-        <div class="col-md-10 main-content">
+        <div class="main-content">
             <!--SHOULD RENDER SPECIFIC INTO HERE-->
             {{ main_content|safe }}
         </div>
