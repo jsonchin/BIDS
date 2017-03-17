@@ -11,9 +11,16 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 
 # Load default config and override config from an environment variable
 app.config.update(dict(
-    DATABASE=os.path.join(app.root_path, 'flaskr.db'),
-    SECRET_KEY='development key',
-    USERNAME='admin',
-    PASSWORD='default'
+    DATABASE=os.path.join(app.root_path, 'brdo.db'),
+    # SECRET_KEY='development key',
+    USERNAME='root',
+    PASSWORD='pw'
 ))
+
+app.config.update(dict(
+    MYSQL_DATABASE_USER='root',
+    MYSQL_DATABASE_PASSWORD='pw',
+    MYSQL_DATABASE_DB='brdo'
+))
+
 app.config.from_envvar('FLASKR_SETTINGS', silent=True)
