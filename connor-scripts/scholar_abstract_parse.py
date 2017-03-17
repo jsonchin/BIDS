@@ -77,7 +77,7 @@ def this_main(author):
 		if extracted_abstract:
 			wordlist += extracted_abstract
 	print wordlist
-	return wordlist
+	return " ".join(wordlist)
 
 def download_file(download_url, number):
     #http://stackoverflow.com/a/24845366
