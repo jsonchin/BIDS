@@ -1,1 +1,61 @@
 <h2>Faculty Search</h2>
+
+<div>
+<input id="faculty-selector" class="form-control" style="display:inline-block;">
+
+    <div id="response-container">
+
+    </div>
+</div>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+var faculty_names = {% autoescape off %}
+
+{{faculty_names}}
+
+{% endautoescape %};
+
+
+
+$(document).ready(function(){
+
+var source = [];
+
+for (var i in faculty_names) {
+    faculty_name = faculty_names[i];
+    source.push({'label':faculty_name, 'value':faculty_name});
+}
+
+function setFacultyInfoTable(faculty_name) {
+   return $.ajax({
+        type:'POST',
+        url:$SCRIPT_ROOT + "/faculty_search_query",
+        data:{'faculty_name':faculty_name},
+        success:function(data) {
+          $("#response-container").html(data);
+        },
+        fail: function(response) {
+          alert("failed");
+        }
+    });
+}
+
+
+$("#faculty-selector").autocomplete({
+    source:source,
+    autoFocus: true,
+    minLength:3,
+    delay:0,
+    select:function(event, ui) {
+
+        $("#faculty-selector").val(ui.item.label);
+        setFacultyInfoTable(ui.item.value);
+
+        return false;
+    }
+});
+
+});
+
+</script>
