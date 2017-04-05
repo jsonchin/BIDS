@@ -1,9 +1,7 @@
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
+from flask import request, url_for, render_template
 
-from flaskr import app
-
-from .database import *
-
+from flaskr.flaskr import app
+from flaskr.flaskr.data_management.database import *
 from .utility import *
 
 
@@ -42,3 +40,23 @@ def post_manual_grant():
     print(request.form['inputGrantAmt'])
     print(request.form['inputURLAdditionalInfo'])
     return ''
+
+@app.route('/manual_faculty_submit', methods=['POST'])
+def post_manual_faculty_submit():
+    """
+    faculty_name,
+    faculty_department
+    faculty_description
+    Lots of blank fields/optional fields
+    :return:
+    """
+    return ''
+
+@app.route('/grant_get_top_k_faculty', methods=['POST'])
+def get_top_k_faculty_for_grant():
+    #get grant data
+    #get faculty
+    #want faculty names to lookup in database
+    #or alternatively all of the info the faculty
+    #render cards for faculty, or pass in data of faculty, list of dictionaries to render in grant_top_k_faculty.html
+    return render_template('response/grant_top_k_faculty.html', faculty_matches=[1,1,1])

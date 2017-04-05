@@ -1,8 +1,8 @@
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
-from flaskr import app
+from flaskr.flaskr import app
 
-from .database import *
+from .data_management.database import *
 
 from .utility import *
 
@@ -57,7 +57,15 @@ def show_manual_grant():
 
 @app.route('/grant_search')
 def show_grant_search():
-    return render_page('grant_search.html', 'manual_grant')
+    qr = TEMP_get_k_grants()
+    grants = qr.rows
+    column_names = qr.column_names
+    # for grant in grants:
+    #     grant[0] = grant[0].decode('utf8')
+
+    faculty_search_html = render_template('grant_search.html', grants=grants, column_names=column_names)
+
+    return render_page_with_html(faculty_search_html, 'manual_grant')
 
 @app.route('/faculty_search')
 def show_faculty_search():
@@ -66,6 +74,5 @@ def show_faculty_search():
     faculty_names = [captialize_name(name) for name in faculty_names]
 
     faculty_search_html = render_template('faculty_search.html', faculty_names=faculty_names)
-
 
     return render_page_with_html(faculty_search_html, 'faculty_search')
