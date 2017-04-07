@@ -1,0 +1,32 @@
+<h2>Manual Grant Insertion</h2>
+
+<form id="manual-grant-form">
+<div class="form-group">
+  <label for="inputGrantTitle">Grant Title</label>
+  <input type="text" class="form-control" id="inputGrantTitle" name="inputGrantTitle" aria-describedby="grantTitle" placeholder="Enter grant title">
+  <small id="grantSmallText" class="form-text text-muted">Easily the most important part! Full title please!</small>
+</div>
+
+<div class="form-group">
+  <label for="inputDescription">Grant Description</label>
+  <textarea class="form-control" id="inputDescription" name="inputDescription" rows="3"></textarea>
+</div>
+
+<div class="form-group">
+  <label for="inputGrantDeadline" class="col-2 col-form-label">Grant Deadline</label>
+  <input class="form-control" type="date" value="" id="inputGrantDeadline" name="inputGrantDeadline">
+</div>
+
+<div class="form-group">
+  <label for="inputGrantAmt" class="col-2 col-form-label">Grant Amount</label>
+  <input class="form-control" type="number" value="" id="inputGrantAmt" name="inputGrantAmt">
+</div>
+
+<div class="form-group">
+  <label for="inputURLAdditionalInfo" class="col-2 col-form-label">URL for additional information</label>
+  <input class="form-control" type="text" value="" id="inputURLAdditionalInfo" name="inputURLAdditionalInfo">
+</div>
+
+  <button type="submit" id="form-submit" class="btn btn-primary">Submit</button>
+  <p id="form-submission-text" style="display:none;"></p>
+</form>

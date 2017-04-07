@@ -1,0 +1,176 @@
+<style>
+.grant-card {
+    width:65vw;
+    height:auto;
+    box-shadow: 5px 5px 5px #888888;
+    margin:auto;
+    margin-bottom:2vh;
+    padding-top:2vh;
+    padding-bottom:2vh;
+    padding-left:2vw;
+    padding-right:2vw;
+    background-color:#FFFFFF;
+    overflow:auto;
+}
+.grant-card-top {
+    //margin-top:2vh;
+    //margin-left:2vw;
+    display:inline-block;
+    width:100%;
+}
+
+.morecontent span {
+    display: none;
+}
+.morelink {
+    display: block;
+    margin-left:20px;
+}
+
+.grant-card-link {
+
+}
+
+.grant-card-title {
+    margin-bottom:5px;
+}
+
+.grant-card-amount {
+    float:right;
+}
+
+.grant-card-sponsor {
+    font-weight:bold;
+}
+
+.grant-card-view-matches-container {
+    width:100%;
+}
+
+.grant-card-view-matches {
+    float:right;
+}
+</style>
+
+<h2>Grant Search</h2>
+
+{% for grant in grants %}
+<div class="grant-card">
+    <div class="grant-card-top">
+        <!--grant title and link-->
+        <div style="width:100%;">
+            <a href={{grant[4]}} target="_blank">
+                <h4 class="grant-card-title">{{grant[0]}}</h4>
+            </a>
+            {% if grant[3] == None %}
+            <div class="grant-card-amount">Deadline: Unspecified</div>
+            {% else %}
+            <div class="grant-card-amount">Deadline: {{grant[3]}}</div>
+            {% endif %}
+        </div>
+
+        <!--sponsor-->
+        <div class="grant-card-sponsor">{{grant[5]}}</div>
+
+        <!--grant amount-->
+        {% if (grant[6] == "0" or grant[6] == None) and (grant[7] == "0" or grant[7] == None) %}
+        <div>No amount specified</div>
+        {% elif grant[6] == grant[7] %}
+        <div>${{grant[6]}}</div>
+        {% elif (grant[6] == "0" or grant[6] == None)%}
+        <div>$0 - ${{grant[7]}}</div>
+        {% elif (grant[7] == "0" or grant[7] == None)%}
+        <div>${{grant[6]}} - </div>
+        {% else %}
+        <div>${{grant[6]}} - ${{grant[7]}}</div>
+        {% endif %}
+
+
+    </div>
+    <div class="grant-card-desc">
+        <span class="read-more">
+        {{grant[1]}}
+        </span>
+    </div>
+    <div class="grant-card-view-matches-container">
+        <a class="grant-card-view-matches">View faculty matches</a>
+    </div>
+</div>
+{% endfor %}
+
+
+<script>
+$(document).ready(function() {
+    //https://codepen.io/maxds/pen/jgeoA
+
+    var showChar = 400;
+    var ellipsis = "...";
+    var moretext = "Show more >";
+    var lesstext = "Show less";
+
+
+    $('.read-more').each(function() {
+        var content = $(this).html();
+
+        if(content.length > showChar) {
+
+            var c = content.substr(0, showChar);
+            var h = content.substr(showChar, content.length - showChar);
+
+            var html = c + '<span class="moreellipses">' + ellipsis +
+                '&nbsp;</span><span class="morecontent"><span>' + h
+                + '</span>&nbsp;&nbsp;<a href="" class="morelink">' + moretext + '</a></span>';
+
+            $(this).html(html);
+            $(this).parent().parent().css("height", "auto");
+        }
+
+    });
+
+    $(".morelink").click(function(){
+        if($(this).hasClass("less")) {
+            $(this).removeClass("less");
+            $(this).html(moretext);
+        } else {
+            $(this).addClass("less");
+            $(this).html(lesstext);
+            $(this).parent().parent().parent().parent().css("height", "auto");
+        }
+        $(this).parent().prev().toggle();
+        $(this).prev().toggle();
+        return false;
+    });
+
+
+
+    $(".grant-card-view-matches").on("click", function() {
+        //make httprequest to django to get top k matches and a new html page
+        var cardMatchesContainer = $(this).parent();
+        cardMatchesContainer.css("margin-top", "2vh");
+        $.ajax({
+            type:'POST',
+            url:$SCRIPT_ROOT + "/grant_get_top_k_faculty",
+            data:{},
+            success:function(data) {
+                $(cardMatchesContainer).html(data);
+            },
+            fail: function(response) {
+              alert("failed");
+            }
+        });
+    });
+});
+</script>
+
+
+    <!--[-->
+        <!--'grant_title',-->
+        <!--'grant_description',-->
+        <!--'grant_posted_date',-->
+        <!--'grant_closing_date',-->
+        <!--'grant_info_url',-->
+        <!--'grant_sponsor',-->
+        <!--'grant_award_floor',-->
+        <!--'grant_award_ceiling',-->
+        <!--'grant_db_insert_date'-->
+    <!--]-->
