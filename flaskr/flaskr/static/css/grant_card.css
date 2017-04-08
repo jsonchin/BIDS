@@ -1,0 +1,51 @@
+.grant-card {
+    width:65vw;
+    height:auto;
+    box-shadow: 5px 5px 5px #888888;
+    margin:auto;
+    margin-bottom:2vh;
+    padding-top:2vh;
+    padding-bottom:2vh;
+    padding-left:2vw;
+    padding-right:2vw;
+    background-color:#FFFFFF;
+    overflow:auto;
+}
+.grant-card-top {
+    //margin-top:2vh;
+    //margin-left:2vw;
+    display:inline-block;
+    width:100%;
+}
+
+.morecontent span {
+    display: none;
+}
+.morelink {
+    display: block;
+    margin-left:20px;
+}
+
+.grant-card-link {
+
+}
+
+.grant-card-title {
+    margin-bottom:5px;
+}
+
+.grant-card-amount {
+    float:right;
+}
+
+.grant-card-sponsor {
+    font-weight:bold;
+}
+
+.grant-card-view-matches-container {
+    width:100%;
+}
+
+.grant-card-view-matches {
+    float:right;
+}

@@ -112,17 +112,17 @@ def get_all_grants():
     cur.close()
     return QueryResponse(rows, [l[0] for l in cur.description])
 
-def get_top_k_recent_grants():
-    cur = db.cursor()
-    cur.execute('''SELECT * FROM grants ORDER BY grant_db_insert_date;''')
-    rows = cur.fetchall()
-    cur.close()
-    return QueryResponse(rows, [l[0] for l in cur.description])
+# def get_top_k_recent_grants(k=10, offset=0):
+#     cur = db.cursor()
+#     cur.execute('''SELECT * FROM grants ORDER BY grant_db_insert_date;''')
+#     rows = cur.fetchall()
+#     cur.close()
+#     return QueryResponse(rows, [l[0] for l in cur.description])
 
-
-def TEMP_get_k_grants(k=10, offset=0):
+def get_offset_k_recent_grants(k=10, offset=0):
     cur = db.cursor()
-    cur.execute('''SELECT * FROM grants LIMIT %s OFFSET %s;''', [k, offset])
+    print(offset)
+    cur.execute('''SELECT * FROM grants ORDER BY grant_db_insert_date LIMIT %s OFFSET %s;''', [k, offset])
     rows = cur.fetchall()
     cur.close()
     return QueryResponse(rows, [l[0] for l in cur.description])

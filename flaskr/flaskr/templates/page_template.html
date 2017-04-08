@@ -30,84 +30,16 @@
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/page.css') }}">
 
+<script type="text/javascript" src="{{ url_for('static', filename='js/page.js') }}"></script>
+
+
+{% for css_file in css_files %}
 <link rel=stylesheet type=text/css href="{{ css_file }}">
+{% endfor %}
 
+{% for js_file in js_files %}
 <script type="text/javascript" src="{{ js_file }}"></script>
-
-
-
-<style>
-
-#main-container {
-    width:100%;
-    padding:0;
-    margin:0;
-}
-
-#main-row {
-    background-color:#FAFAFA;
-    height:auto;
-    overflow:auto;
-    width:100%;
-    margin:0;
-}
-
-#nav-sidebar {
-    height:100vh;
-    width:250px;
-    background-color:#003262;
-    top:0;
-    left:0;
-    position:fixed;
-}
-
-#nav-sidebar-ul {
-    width:100%;
-    display:block;
-    list-style-type: none;
-    padding:0;
-}
-
-.sidebar-li {
-    height:50px;
-    width:100%;
-    color:white;
-    text-align:left;
-    left:0;
-    text-decoration: none;
-    background: none;
-    padding:20px;
-    display:flex;
-    align-items: center;
-    //background:#002d58;
-}
-
-.sidebar-li:hover {
-    background:#001f3d;
-    cursor:pointer;
-    cursor:hand;
-}
-
-.sidebar-a {
-    text-align:left;
-    left:0;
-    text-decoration: none;
-    background-color: none;
-    color:#ffffff;
-    pointer-event:none;
-    text-decoration: none;
-}
-
-.sidebar-a:hover, .sidebar-a:visited, .sidebar-a:link {
-    text-decoration: none;
-    color:#ffffff;
-}
-
-.main-content {
-    margin-left:300px;
-    position:relative;
-}
-</style>
+{% endfor %}
 
 
 <head>
@@ -134,12 +66,3 @@
 
 </body>
 </html>
-
-
-<script>
-$(document).ready(function() {
-    $(".sidebar-li").on("click", function() {
-        window.location.href = $(this).children("a").attr("href");
-    });
-});
-</script>

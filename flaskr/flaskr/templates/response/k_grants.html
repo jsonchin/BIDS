@@ -1,0 +1,47 @@
+{% for grant in grants %}
+<div class="grant-card">
+    <div class="grant-card-top">
+        <!--grant title and link-->
+        <div style="width:100%;">
+            <a href={{grant[4]}} target="_blank">
+                <h4 class="grant-card-title">{{grant[0]}}</h4>
+            </a>
+            {% if grant[3] == None %}
+            <div class="grant-card-amount">Deadline: Unspecified</div>
+            {% else %}
+            <div class="grant-card-amount">Deadline: {{grant[3]}}</div>
+            {% endif %}
+        </div>
+
+        <!--sponsor-->
+        <div class="grant-card-sponsor">{{grant[5]}}</div>
+
+        <!--grant amount-->
+        {% if (grant[6] == "0" or grant[6] == None) and (grant[7] == "0" or grant[7] == None) %}
+        <div>No amount specified</div>
+        {% elif grant[6] == grant[7] %}
+        <div>${{grant[6]}}</div>
+        {% elif (grant[6] == "0" or grant[6] == None)%}
+        <div>$0 - ${{grant[7]}}</div>
+        {% elif (grant[7] == "0" or grant[7] == None)%}
+        <div>${{grant[6]}} - </div>
+        {% else %}
+        <div>${{grant[6]}} - ${{grant[7]}}</div>
+        {% endif %}
+
+
+    </div>
+    <div class="grant-card-desc">
+        <span class="read-more">
+            {% if (grant[1] == None) %}
+                ''
+            {% else %}
+                {{grant[1]}}
+            {% endif %}
+        </span>
+    </div>
+    <div class="grant-card-view-matches-container">
+        <a class="grant-card-view-matches">View faculty matches</a>
+    </div>
+</div>
+{% endfor %}
