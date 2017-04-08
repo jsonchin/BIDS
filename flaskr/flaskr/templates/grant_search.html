@@ -89,7 +89,11 @@
     </div>
     <div class="grant-card-desc">
         <span class="read-more">
-        {{grant[1]}}
+            {% if (grant[1] == None) %}
+                ''
+            {% else %}
+                {{grant[1]}}
+            {% endif %}
         </span>
     </div>
     <div class="grant-card-view-matches-container">
@@ -118,7 +122,7 @@ $(document).ready(function() {
             var h = content.substr(showChar, content.length - showChar);
 
             var html = c + '<span class="moreellipses">' + ellipsis +
-                '&nbsp;</span><span class="morecontent"><span>' + h
+                '&nbsp;</span><span class="morecontent"><span class="other-content">' + h
                 + '</span>&nbsp;&nbsp;<a href="" class="morelink">' + moretext + '</a></span>';
 
             $(this).html(html);
@@ -144,13 +148,29 @@ $(document).ready(function() {
 
 
     $(".grant-card-view-matches").on("click", function() {
-        //make httprequest to django to get top k matches and a new html page
         var cardMatchesContainer = $(this).parent();
+        var descriptionContainer = cardMatchesContainer.parent().children(".grant-card-desc");
+        var span1 = descriptionContainer.children("span");
+        //http://stackoverflow.com/questions/3442394/using-text-to-retrieve-only-text-not-nested-in-child-tags
+        var descPart1 = span1.clone()    //clone the element
+                        .children() //select all the children
+                        .remove()   //remove all the children
+                        .end()  //again go back to selected element
+                        .text();
+        var descPart2 = span1.find(".other-content").text();
+
+        var title = cardMatchesContainer.parent().children(".grant-card-title").text();
+
+        var description = descPart1 + descPart2;
         cardMatchesContainer.css("margin-top", "2vh");
+
+        console.log("finding matches");
+
         $.ajax({
             type:'POST',
             url:$SCRIPT_ROOT + "/grant_get_top_k_faculty",
-            data:{},
+            data:{"grant_description":description,
+                    "grant_title":title},
             success:function(data) {
                 $(cardMatchesContainer).html(data);
             },

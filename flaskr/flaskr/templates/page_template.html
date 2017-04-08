@@ -20,6 +20,9 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
@@ -36,19 +39,23 @@
 <style>
 
 #main-container {
-    background-color:#FAFAFA;
+    width:100%;
     padding:0;
     margin:0;
 }
 
 #main-row {
-    height:100vh;
+    background-color:#FAFAFA;
+    height:auto;
+    overflow:auto;
+    width:100%;
+    margin:0;
 }
 
 #nav-sidebar {
     height:100vh;
     width:250px;
-    background-color:#222222;
+    background-color:#003262;
     top:0;
     left:0;
     position:fixed;
@@ -72,10 +79,13 @@
     padding:20px;
     display:flex;
     align-items: center;
+    //background:#002d58;
 }
 
 .sidebar-li:hover {
-    background:#777777;
+    background:#001f3d;
+    cursor:pointer;
+    cursor:hand;
 }
 
 .sidebar-a {
@@ -85,8 +95,13 @@
     background-color: none;
     color:#ffffff;
     pointer-event:none;
+    text-decoration: none;
 }
 
+.sidebar-a:hover, .sidebar-a:visited, .sidebar-a:link {
+    text-decoration: none;
+    color:#ffffff;
+}
 
 .main-content {
     margin-left:300px;
@@ -106,7 +121,7 @@
         <div id="nav-sidebar">
             <ul id="nav-sidebar-ul" class="sidebar-nav">
             {% for tab in tabs_d %}
-                <li class="sidebar-li"><a class="sidebar-a" href="{{tab.route}}">{{ tab.name }}</a></li>
+                <li class="sidebar-li"><a class="sidebar-a" href="{{tab.route}}"><i class="material-icons">chevron_right</i> {{ tab.name }}</a></li>
             {% endfor %}
             </ul>
         </div>
@@ -119,3 +134,12 @@
 
 </body>
 </html>
+
+
+<script>
+$(document).ready(function() {
+    $(".sidebar-li").on("click", function() {
+        window.location.href = $(this).children("a").attr("href");
+    });
+});
+</script>

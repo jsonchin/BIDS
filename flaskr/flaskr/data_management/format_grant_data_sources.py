@@ -87,3 +87,44 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
     # df = df.drop_duplicates(['OpportunityTitle'])
 
     return df
+
+def format_nsf_data(file_name='temp_data/nsf.csv'):
+    """
+    :param file_name: path to grants gov csv files
+    :return: pandas df with columns corresponding to grants_db_columns_names
+    """
+    df = pd.read_csv(file_name, sep='~')
+
+    curr_date_str = db_utils.get_current_time()[:10]
+
+    def filter_deadline_passed(date_str):
+        try:
+            return date_str >= curr_date_str
+        except:
+            return False
+
+    df = df[df['Due Date End'].apply(filter_deadline_passed)]
+
+    df['AgencyName'] = 'National Science Foundation'
+    df['AwardFloor'] = None
+    df['AwardCeiling'] = None
+    df['grant_db_insert_date'] = db_utils.get_current_time()
+
+
+    l_cols = ['Headline',
+              'Description',
+              'Due Date Start',
+              'Due Date End',
+              'Link',
+              'AgencyName',
+              'AwardFloor',
+              'AwardCeiling',
+              'grant_db_insert_date']
+
+    df = df[l_cols]
+
+    df.columns = db_info.grants_db_column_names
+
+    df = df.where(pd.notnull(df), None)
+
+    return df

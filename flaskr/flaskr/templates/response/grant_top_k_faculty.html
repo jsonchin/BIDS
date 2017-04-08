@@ -10,26 +10,42 @@
     overflow:auto;
 }
 .faculty-card-left {
-    float:left;
+    //float:left;
+    //width:70%;
 }
 .faculty-card-right {
     float:right;
+    margin-left:2vw;
+    margin-right:2vw;
+    margin-top:3vh;
+    margin-bottom:1vh;
+}
+
+hr {
+	border-top: 1px dashed #8c8b8b;
 }
 </style>
 
 <div class="faculty-matches-container">
     {% for faculty in faculty_matches %}
+    <hr>
     <!--can use as faculty card-->
     <div class="faculty-card">
+        <div class="faculty-card-right">
+            <!--<img src="http://placehold.it/200x200">-->
+            <img src="{{faculty.faculty_img_url}}">
+        </div>
         <div class="faculty-card-left">
             <!--Should link to the faculty's page-->
-            <h3>{{loop.index}}) <a>Faculty Name</a></h3>
-            <h4>Department</h4>
-            <p>Description</p>
+            <h3>{{loop.index}}) <a href="{{faculty.faculty_site_url}}" target="_blank">{{faculty.faculty_name}}</a> ({{faculty.dist}})</h3>
+            <h4>{{faculty.department}}</h4>
+            {% if (faculty.description == None) %}
+            No data on VCResearch. (Refer to their personal webpage)
+            {% else %}
+            <p>{{faculty.description}}</p>
+            {% endif %}
         </div>
-        <div class="faculty-card-right">
-            <img src="http://placehold.it/200x200">
-        </div>
+
     </div>
     {% endfor %}
 

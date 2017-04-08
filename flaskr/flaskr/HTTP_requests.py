@@ -3,6 +3,7 @@ from flask import request, url_for, render_template
 from flaskr.flaskr import app
 from flaskr.flaskr.data_management.database import *
 from .utility import *
+from .matching import *
 
 
 def render_page(html_file_name, css_file):
@@ -59,4 +60,15 @@ def get_top_k_faculty_for_grant():
     #want faculty names to lookup in database
     #or alternatively all of the info the faculty
     #render cards for faculty, or pass in data of faculty, list of dictionaries to render in grant_top_k_faculty.html
-    return render_template('response/grant_top_k_faculty.html', faculty_matches=[1,1,1])
+
+    grant_description = request.form['grant_description']
+    grant_title = request.form['grant_title']
+
+    faculty_matches = get_closest_k_faculty({'grant_description':grant_description,
+                           'grant_title':grant_title})
+
+    for faculty_d in faculty_matches:
+        faculty_d['faculty_img_url'] = url_for('static', filename='images/faculty_images/{}'.format(faculty_d['faculty_name']))
+        faculty_d['faculty_name'] = captialize_name(faculty_d['faculty_name'])
+
+    return render_template('response/grant_top_k_faculty.html', faculty_matches=faculty_matches)

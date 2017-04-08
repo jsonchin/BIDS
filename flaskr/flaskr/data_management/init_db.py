@@ -200,10 +200,17 @@ def init_grants(cur):
     # grants.gov
     grants_gov_df = format_grants_gov_data()
 
-    grants_gov_df = grants_gov_df.drop_duplicates(['grant_title', 'grant_info_url'])
+    grants_df = grants_gov_df.drop_duplicates(['grant_title', 'grant_info_url'])
+
+    # nsf
+
+    nsf_df = format_nsf_data()
+
+    grants_df = nsf_df.append(grants_df).drop_duplicates(['grant_title', 'grant_info_url'])
+
 
     rows = []
-    for row in grants_gov_df.iterrows():
+    for row in grants_df.iterrows():
         rows.append(row[1].values.tolist())
 
     cur.executemany(sql, rows)

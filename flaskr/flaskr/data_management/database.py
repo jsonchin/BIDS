@@ -47,6 +47,13 @@ def get_faculty_names():
     cur.close()
     return [t[0] for t in rows]
 
+def get_faculty_webpages():
+    cur = db.cursor()
+    cur.execute('''
+        SELECT * FROM faculty_webpages;''')
+    rows = cur.fetchall()
+    return QueryResponse(rows, [l[0] for l in cur.description])
+
 
 def get_faculty_all():
     cur = db.cursor()
