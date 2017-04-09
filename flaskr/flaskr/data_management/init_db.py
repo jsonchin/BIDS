@@ -7,7 +7,7 @@ from format_grant_data_sources import *
 import MySQLdb
 
 db =MySQLdb.connect(
-    host='localhost',
+    host='127.0.0.1',
     user='root',
     passwd='pw',
     db='brdo'
@@ -97,8 +97,7 @@ def init_drop_and_create_tables(cur):
             grant_sponsor TEXT,
             grant_award_floor TEXT,
             grant_award_ceiling TEXT,
-            grant_db_insert_date VARCHAR(10),
-            PRIMARY KEY(grant_title, grant_info_url)
+            grant_db_insert_date VARCHAR(10)
         );""")
 
     cur.execute("""CREATE INDEX grants_index ON grants (grant_db_insert_date);""")
@@ -112,8 +111,7 @@ def init_drop_and_create_tables(cur):
                 grant_sponsor TEXT,
                 grant_award_floor TEXT,
                 grant_award_ceiling TEXT,
-                grant_db_insert_date DATE,
-                PRIMARY KEY(grant_title, grant_info_url)
+                grant_db_insert_date DATE
             );""")
 
 
