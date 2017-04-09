@@ -206,6 +206,7 @@ def init_grants(cur):
 
     nsf_df = format_nsf_data()
 
+    grants_df = grants_df[~grants_df['grant_title'].isnull()]
     grants_df = nsf_df.append(grants_df).drop_duplicates(['grant_title', 'grant_info_url'])
 
     rows = []

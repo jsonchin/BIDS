@@ -9,22 +9,20 @@ from .utility import *
 from .HTTP_requests import get_k_more_grants_html
 
 
-def render_page(html_file_name, css_files, js_files):
-    return render_page_with_html(render_template(html_file_name), css_files, js_files)
-
-def render_page_with_html(html, css_files, js_files):
-
-    tabs = [
+TABS = [
         ('Index', '/'),
         ('Manual Grant Submission', '/manual_grant'),
         ('Grant Search', '/grant_search'),
         ('Faculty Search', '/faculty_search')
     ]
+
+def render_page(html_file_name, css_files, js_files):
+    return render_page_with_html(render_template(html_file_name), css_files, js_files)
+
+def render_page_with_html(html, css_files, js_files):
     tabs_d = []
-    for tab in tabs:
+    for tab in TABS:
         tabs_d.append({'name':tab[0], 'route':tab[1]})
-
-
 
     return render_template('page_template.html',
                            tabs_d=tabs_d,
@@ -39,18 +37,18 @@ def show_index():
 @app.route('/manual_grant')
 def show_manual_grant():
     return render_page('manual_grant.html',
-                       ['manual_grant.css'],
-                       ['manual_grant.js'])
+                       ['manual_grant.css', 'grant_card.css'],
+                       ['manual_grant.js', 'grant_card.js'])
 
 @app.route('/grant_search')
 def show_grant_search():
     k_grants_html = get_k_more_grants_html()
 
-    faculty_search_html = render_template('grant_search.html', k_grants_html=k_grants_html)
+    grant_search_html = render_template('grant_search.html', k_grants_html=k_grants_html)
 
-    return render_page_with_html(faculty_search_html,
-                                 ['grant_search.css', 'top_k_similar_faculty.css', 'grant_card.css'],
-                                 ['grant_search.js'])
+    return render_page_with_html(grant_search_html,
+                                 ['grant_search.css', 'faculty_card.css', 'grant_card.css'],
+                                 ['grant_search.js', 'grant_card.js'])
 
 @app.route('/faculty_search')
 def show_faculty_search():
@@ -61,5 +59,5 @@ def show_faculty_search():
     faculty_search_html = render_template('faculty_search.html', faculty_names=faculty_names)
 
     return render_page_with_html(faculty_search_html,
-                                 ['faculty_search.css', 'grant_card.css'],
-                                 ['faculty_search.js'])
+                                 ['faculty_search.css', 'faculty_card.css', 'grant_card.css'],
+                                 ['faculty_search.js', 'grant_card.js'])

@@ -1,13 +1,9 @@
 <h2>Faculty Search</h2>
 
 <div>
-<input id="faculty-selector" class="form-control" style="display:inline-block;">
+<input id="faculty-selector" class="form-control">
 
     <div id="response-container">
-
-    </div>
-
-    <div id="grant-matches-container">
 
     </div>
 </div>
@@ -31,31 +27,14 @@ for (var i in faculty_names) {
     source.push({'label':faculty_name, 'value':faculty_name});
 }
 
-function setFacultyInfoTable(faculty_name) {
-   return $.ajax({
-        type:'POST',
-        url:$SCRIPT_ROOT + "/faculty_search_query",
-        data:{'faculty_name':faculty_name},
-        success:function(data) {
-          $("#response-container").html(data);
-        },
-        fail: function(response) {
-          alert("failed");
-        }
-    });
-}
-
-
 $("#faculty-selector").autocomplete({
     source:source,
     autoFocus: true,
     minLength:3,
     delay:0,
     select:function(event, ui) {
-
         $("#faculty-selector").val(ui.item.label);
         setFacultyInfoTable(ui.item.value);
-
         return false;
     }
 });

@@ -8,25 +8,41 @@ import html
 
 
 """
-grant_title TEXT,
-grant_description TEXT,
-grant_posted_date DATE,
-grant_closing_date DATE,
-grant_info_url TEXT,
-grant_sponsor TEXT,
-grant_award_floor TEXT,
-grant_award_ceiling TEXT,
-grant_db_insert_date DATE,
-PRIMARY KEY(grant_title, grant_posted_date)
+CREATE TABLE grants (
+    grant_title VARCHAR(500),
+    grant_description TEXT,
+    grant_posted_date VARCHAR(10),
+    grant_closing_date VARCHAR(10),
+    grant_info_url VARCHAR(80),
+    grant_sponsor TEXT,
+    grant_award_floor TEXT,
+    grant_award_ceiling TEXT,
+    grant_db_insert_date VARCHAR(10),
+    PRIMARY KEY(grant_title, grant_info_url)
+);
 """
 
-"""
-should get all columns except for the grant_db_insert_date
-"""
+def filter_deadline_passed(date_str, curr_date_str):
+    try:
+        return date_str >= curr_date_str
+    except:
+        return False
+
+def unescape_str(s):
+    try:
+        return html.unescape(s.replace('&#147;', '"') \
+                             .replace('&#148;', '"') \
+                             .replace('&#146;', "'") \
+                             .replace('\xa0', '') \
+                             .replace('’', "'") \
+                             .replace('&lt;p&gt;', '') \
+                             .replace('&quot;', '"'))
+    except:
+        return None
 
 def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
     """
-    :param file_name: path to grants gov csv files
+    :param file_name: path to grants gov csv file
     :return: pandas df with columns corresponding to grants_db_columns_names
     """
     df = pd.read_csv(file_name, sep='~', encoding='utf-8')
@@ -39,16 +55,8 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
             return date_str
 
     df['CloseDate'] = df['CloseDate'].apply(format_date_str)
-
     curr_date_str = db_utils.get_current_time()[:10]
-
-    def filter_deadline_passed(date_str):
-        try:
-            return date_str >= curr_date_str
-        except:
-            return False
-
-    df = df[df['CloseDate'].apply(filter_deadline_passed)]
+    df = df[df['CloseDate'].apply(lambda date_str: filter_deadline_passed(date_str, curr_date_str))]
 
     df['PostDate'] = df['PostDate'].apply(format_date_str)
 
@@ -67,43 +75,26 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
               'AwardCeiling',
               'grant_db_insert_date']
 
-    def unescape_str(s):
-        try:
-            return html.unescape(s.replace('&#147;', '"')\
-                                    .replace('&#148;', '"')\
-                                    .replace('&#146;', "'"))
-        except:
-            return None
-
-    df['OpportunityTitle'] = df['OpportunityTitle'].apply(unescape_str)
-    df['Description'] = df['Description'].apply(unescape_str)
-
     df = df[l_cols]
-
     df.columns = db_info.grants_db_column_names
+    df['grant_title'] = df['grant_title'].apply(unescape_str)
+    df['grant_description'] = df['grant_description'].apply(unescape_str)
 
     df = df.where(pd.notnull(df), None)
-
-    # df = df.drop_duplicates(['OpportunityTitle'])
 
     return df
 
 def format_nsf_data(file_name='temp_data/nsf.csv'):
     """
-    :param file_name: path to grants gov csv files
+    :param file_name: path to nsf csv file
     :return: pandas df with columns corresponding to grants_db_columns_names
     """
     df = pd.read_csv(file_name, sep='~')
 
     curr_date_str = db_utils.get_current_time()[:10]
+    df['Due Date End'][df['Due Date End'] == 'Not listed'] = None
 
-    def filter_deadline_passed(date_str):
-        try:
-            return date_str >= curr_date_str
-        except:
-            return False
-
-    df = df[df['Due Date End'].apply(filter_deadline_passed)]
+    df = df[df['Due Date End'].apply(lambda date_str: filter_deadline_passed(date_str, curr_date_str))]
 
     df['AgencyName'] = 'National Science Foundation'
     df['AwardFloor'] = None
@@ -122,9 +113,11 @@ def format_nsf_data(file_name='temp_data/nsf.csv'):
               'grant_db_insert_date']
 
     df = df[l_cols]
-
     df.columns = db_info.grants_db_column_names
+    df['grant_title'] = df['grant_title'].apply(unescape_str)
+    df['grant_description'] = df['grant_description'].apply(unescape_str)
 
     df = df.where(pd.notnull(df), None)
+
 
     return df

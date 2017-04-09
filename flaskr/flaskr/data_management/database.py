@@ -121,7 +121,6 @@ def get_all_grants():
 
 def get_offset_k_recent_grants(k=10, offset=0):
     cur = db.cursor()
-    print(offset)
     cur.execute('''SELECT * FROM grants ORDER BY grant_db_insert_date LIMIT %s OFFSET %s;''', [k, offset])
     rows = cur.fetchall()
     cur.close()
