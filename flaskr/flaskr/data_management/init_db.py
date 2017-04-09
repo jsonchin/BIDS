@@ -7,7 +7,7 @@ from format_grant_data_sources import *
 import MySQLdb
 
 db =MySQLdb.connect(
-    host='localhost',
+    host='127.0.0.1',
     user='root',
     passwd='pw',
     db='brdo'
