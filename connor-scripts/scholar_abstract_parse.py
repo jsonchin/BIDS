@@ -7,19 +7,30 @@ import urllib2
 from bs4 import BeautifulSoup
 import pdfminer
 import slate
+import string
 
 """
 example use from command line:
 $ python scholar_abstract_parse.py.py "Pieter Abbeel"
 
+to use outside command line, call get_bag_of_words
+
 """
 
+academic_paper_sections = set(["Abstract", "Introduction", "Intro", "Background", "History", \
+	"Review-of-Literature", "Methodology", "Results", "Argument", "Critique", "Discussion", \
+	"Conclusion", "Works Cited", "References","Materials and Methods", "Materials", "Methods"])
 first_words = set(['Versions', 'URL', 'Title', 'Excerpt', 'Cluster', 'Citations', 'Year', 'PDF'])
 
 def extract_urls(string):
 	return re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', string)
 
-def this_main(author):
+def get_bag_of_words(author):
+	"""
+	ARG1 - string - name of author
+	RET - List of strings found in abstracts, introductions, and snippets of either
+	""" 
+
 	# call scholar.py script and pipe output into file
 	query_string = 'python scholar.py --author ' + author
 	p = Popen(['python', 'scholar.py', '--author', author], stdout=PIPE, stderr=PIPE, stdin=PIPE)
@@ -50,7 +61,6 @@ def this_main(author):
 		urls = extract_urls(line)
 		if urls:
 			for url in urls:
-				
 				if url.count(":") > 1:
 					p = re.compile('https://+')
 					multiple_urls = ["http://" + word for word in p.split(url) if word and "scholar.google.com" not in word]
@@ -66,15 +76,14 @@ def this_main(author):
 							got_abstract = True
 						except Exception as e:
 							print("got error: " + str(e) + " downloading from " + url)
-					else:
-						# print(url + " isn't a pdf")
-						extract_from_webpage(url)
 					if extracted_abstract:
 						number += 1
 						got_abstract = True
 		elif not got_abstract and first_word == "Excerpt":
-			extracted_abstract = line.split()
+			extracted_abstract = line.split()[1:] #don't want to include the word "Excerpt"
 		if extracted_abstract:
+			# remove punctuation and numbers, and append words from new abstract to list
+			extracted_abstract = [word.translate(None, string.punctuation) for word in extracted_abstract if not word.isdigit()]
 			wordlist += extracted_abstract
 	print wordlist
 	return " ".join(wordlist)
@@ -89,36 +98,43 @@ def download_file(download_url, number):
     print("Completed" + filename)
     return filename
 
-def extract_abstract_from_url(url, number):
+def extract_abstract_from_url(url, number, delete_file = True):
+	"""
+	Downloads pdf, extracts words from abstract or intro, deletes pdf
+	ARG1 - string - url of pdf to try to download
+	ARG2 - number which is part of the name of the file, in case we wan't to keep the file
+	RET - list of words, or None
+	"""
 	filename = download_file(url, number)
 	with open(filename) as f:
   		doc= slate.PDF(f)
   		for page in doc:
   			if "Abstract" in page:
-  				words_to_return = page.split()
+  				words_in_page = page.split()
+  				words_to_return = keep_only_one_section(words_in_page, "Abstract")
+  				if delete_file:
+  					os.remove(filename)
  				return words_to_return
- 			elif "Introduction" in page or "Intro" in page:
+ 			elif "Introduction" in page:
  				words_to_return = page.split()
+ 				words_to_return = keep_only_one_section(words_in_page, "Introduction")
+ 				if delete_file:
+  					os.remove(filename)
  				return words_to_return
+
 	print("No Abstract found in filename: " + str(filename))
 	return None
-	# parse pdf
 
-
-def extract_from_webpage(url):
-	pass
-# 	# http://stackoverflow.com/a/13087415
-# 	response = urllib2.urlopen(url)
-# 	response_string = str(response.read())
-# 	soup = BeautifulSoup(response_string)
-# 	page = soup.find_all('div')
-# 	for thing in page:
-# 		print(thing, type(thing))
-# 	print(page)
-
-
+def keep_only_one_section(wordlist, desired_section = "Abstract"):
+	start_idx = wordlist.index(desired_section)
+	for idx in range(start_idx, len(wordlist)):
+		word = wordlist[idx]
+		if word in academic_paper_sections and word != desired_section:
+			return wordlist[start_idx + 1: idx]
+	return wordlist
 	
-	return ""
+
+
 if __name__ == "__main__":
 	author = sys.argv[1]
-	this_main(author)
+	get_bag_of_words(author)
