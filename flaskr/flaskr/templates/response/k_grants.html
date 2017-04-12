@@ -36,7 +36,7 @@
 
     </div>
     <div class="grant-card-desc">
-        <span class="read-more">
+        <span class="read-more" data-show-n-char="400">
             {% if (grant.grant_description == None) %}
                 ''
             {% else %}
@@ -46,8 +46,9 @@
     </div>
 
     {% if show_faculty_matches %}
+
+    <a class="grant-card-view-matches">View faculty matches</a>
     <div class="grant-card-view-matches-container">
-        <a class="grant-card-view-matches">View faculty matches</a>
     </div>
     {% endif %}
 </div>

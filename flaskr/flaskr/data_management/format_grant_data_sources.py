@@ -23,12 +23,25 @@ CREATE TABLE grants (
 """
 
 def filter_deadline_passed(date_str, curr_date_str):
+    """
+    Return True if record date_str is older/less than the curr_date_str
+        For the case of null date_strs, return False (do not filter it)
+    :param date_str:
+    :param curr_date_str:
+    :return:
+    """
     try:
         return date_str >= curr_date_str
     except:
         return False
 
 def unescape_str(s):
+    """
+    Remove weird characters here. Should find a better way of doing this
+        but until then, remove characters one by one
+    :param s:
+    :return:
+    """
     try:
         return html.unescape(s.replace('&#147;', '"') \
                              .replace('&#148;', '"') \
@@ -55,7 +68,7 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
             return date_str
 
     df['CloseDate'] = df['CloseDate'].apply(format_date_str)
-    curr_date_str = db_utils.get_current_time()[:10]
+    curr_date_str = db_utils.get_current_date()
     df = df[df['CloseDate'].apply(lambda date_str: filter_deadline_passed(date_str, curr_date_str))]
 
     df['PostDate'] = df['PostDate'].apply(format_date_str)
@@ -63,7 +76,7 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
     df['grants_gov_url'] = df['OpportunityID']\
             .apply(lambda id:'https://www.grants.gov/web/grants/view-opportunity.html?oppId={}'.format(id))
 
-    df['grant_db_insert_date'] = db_utils.get_current_time()
+    df['grant_db_insert_date'] = curr_date_str
 
     l_cols = ['OpportunityTitle',
               'Description',
@@ -91,7 +104,7 @@ def format_nsf_data(file_name='temp_data/nsf.csv'):
     """
     df = pd.read_csv(file_name, sep='~')
 
-    curr_date_str = db_utils.get_current_time()[:10]
+    curr_date_str = db_utils.get_current_date()
     df['Due Date End'][df['Due Date End'] == 'Not listed'] = None
 
     df = df[df['Due Date End'].apply(lambda date_str: filter_deadline_passed(date_str, curr_date_str))]
@@ -99,7 +112,7 @@ def format_nsf_data(file_name='temp_data/nsf.csv'):
     df['AgencyName'] = 'National Science Foundation'
     df['AwardFloor'] = None
     df['AwardCeiling'] = None
-    df['grant_db_insert_date'] = db_utils.get_current_time()
+    df['grant_db_insert_date'] = curr_date_str
 
 
     l_cols = ['Headline',

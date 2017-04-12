@@ -67,6 +67,11 @@
     color:#ffffff;
 }
 
+.list-bullet {
+    margin-left:4px;
+    color:#fdb71d;
+}
+
 .main-content {
     margin-left:300px;
     position:relative;

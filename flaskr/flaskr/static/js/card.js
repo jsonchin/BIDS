@@ -7,6 +7,8 @@ var lesstext = "Show less";
 function initializeReadMore () {
     var content = $(this).html();
 
+    var showChar = parseInt($(this).data("show-n-char"));
+
     if(content.length > showChar) {
 
         var c = content.substr(0, showChar);

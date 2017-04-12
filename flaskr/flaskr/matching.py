@@ -39,7 +39,9 @@ def text_to_bag(text):
         tokens = nltk.word_tokenize(text)
 
         names = set()
-        for names_l in map(lambda s: s.lower().split(' '), get_faculty_names()):
+        faculty_names = [l[0] for l in get_faculty_names().rows]
+
+        for names_l in map(lambda s: s.lower().split(' '), faculty_names):
             for name in names_l:
                 names.add(name)
         stopwords = set(nltk.corpus.stopwords.words('english') + list(string.punctuation))
@@ -201,10 +203,10 @@ def initialize_grants():
 # given a cleaned bag of words (could be faculty or grant), return the closest k grants
 def get_k_closest_faculty(corpus, k=5):
     """
-    Given information about a grant and how many faculty to match with,
+    Given a corpus and how many faculty to match with,
         returns a list of information about the faculty
 
-    Utilizes GloVE embeddings, takes average of glove vectors of sentences for both faculty and the grant,
+    Utilizes GloVE embeddings, takes average of glove vectors of sentences for both the corpus and the faculty,
     then uses kNearestNeighbors to find the top k faculty matches
 
     :param grant_d: dictionary with keys: (grant_title - str, grant_description - str)
@@ -218,8 +220,6 @@ def get_k_closest_faculty(corpus, k=5):
     corpus_bag = text_to_bag(corpus)
 
     corpus_vec = bag_to_vec(corpus_bag)
-
-    print(corpus_bag)
 
     knn = NearestNeighbors(n_neighbors=k, n_jobs=-1)
     knn.fit(df_faculty['glove_vec'][~df_faculty['glove_vec'].isnull()].values.tolist())
@@ -243,10 +243,11 @@ def get_k_closest_faculty(corpus, k=5):
 
 def get_k_closest_grants(corpus, k=5):
     """
-    returns a list of information about the grants that are most similar to the corpus
+    Given a corpus and how many grants to match with,
+        returns a list of information about the grants
 
-    Utilizes GloVE embeddings, takes average of glove vectors of sentences for both faculty and the grant,
-    then uses kNearestNeighbors to find the top k faculty matches
+    Utilizes GloVE embeddings, takes average of glove vectors of sentences for both the corpus and the grants,
+    then uses kNearestNeighbors to find the top k grant matches
 
     :param grant_d: dictionary with keys: (grant_title - str, grant_description - str)
     :param k: integer
