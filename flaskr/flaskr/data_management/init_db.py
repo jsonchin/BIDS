@@ -7,6 +7,7 @@ import json
 import nltk.stem.wordnet as wordnet
 import numpy as np
 import pandas as pd
+import pickle
 import random
 import sklearn
 import string
@@ -41,6 +42,10 @@ def init_db():
 
     init_grants(cur)
 
+    init_faculty_previous_grants(cur)
+
+    create_vectorizers()
+
     db.commit()
 
 
@@ -54,6 +59,7 @@ def init_drop_and_create_tables(cur):
     cur.execute("""DROP TABLE IF EXISTS faculty_vcr;""")
     cur.execute("""DROP TABLE IF EXISTS grants;""")
     cur.execute("""DROP TABLE IF EXISTS grants_user_input;""")
+    cur.execute("""DROP TABLE IF EXISTS faculty_grants;""")
     cur.execute("""CREATE TABLE faculty_vcr (
             faculty_name VARCHAR(50) NOT NULL,
             faculty_profile_url VARCHAR(200),
@@ -108,8 +114,8 @@ def init_drop_and_create_tables(cur):
             grant_sponsor TEXT,
             grant_award_floor TEXT,
             grant_award_ceiling TEXT,
-            grant_db_insert_date VARCHAR(10),
-            PRIMARY KEY(grant_title, grant_info_url)
+            grant_db_insert_date VARCHAR(10)#,
+            #PRIMARY KEY(grant_title, grant_info_url)
         );""")
 
     cur.execute("""CREATE INDEX grants_index ON grants (grant_db_insert_date);""")
@@ -123,23 +129,13 @@ def init_drop_and_create_tables(cur):
                 grant_sponsor TEXT,
                 grant_award_floor TEXT,
                 grant_award_ceiling TEXT,
-                grant_db_insert_date DATE,
-                PRIMARY KEY(grant_title, grant_info_url)
+                grant_db_insert_date DATE#,
+                #PRIMARY KEY(grant_title, grant_info_url)
             );""")
 
-    cur.execute("""CREATE TABLE vocabulary (
-                source TEXT,
-                vocab TEXT
-            );""")
-
-    cur.execute("""CREATE TABLE faculty_profiles (
-                name TEXT,
-                profile TEXT
-            );""")
-
-    cur.execute("""CREATE TABLE grants_profiles (
-                name TEXT,
-                profile TEXT
+    cur.execute("""CREATE TABLE faculty_grants (
+                title TEXT,
+                faculty TEXT
             );""")
 
 def split_first_last_name(s):
@@ -184,18 +180,57 @@ def init_faculty_vcr(cur):
 
     cur.executemany(sql, rows)
 
-def init_vocab_and_faculty_profiles(cur):
+def init_faculty_previous_grants(cur):
+    """ Initialize faculty previous grants from research_grant_history """
+    punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
+    faculty_grants = {}
+    grant_history_df = pd.read_csv('temp_data/research_grant_history.csv', delimiter=",")
+    for index, row in grant_history_df.iterrows():
+        name = row['PI Name'].lower().translate(punc_trans)
+        name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
+        faculty_grants[row['Title']] = name
+
+    faculty_grants_stmt = "INSERT INTO faculty_grants (title, faculty) VALUES (%s, %s)"
+    faculty_grants_rows = faculty_grants.items()
+
+    cur.executemany(faculty_grants_stmt, faculty_grants_rows)
+
+def create_vectorizers():
+    """ Create faculty_vectorizer and grant_vectorizer """
+    sw = set(stopwords.words('english'))
+    wnl = wordnet.WordNetLemmatizer()
+    punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
+    num_trans = str.maketrans('', '', '123456789')
+
     """ Preprocessing faculty data
-        Computes TF-IDF over entire faculty corpus """
-    faculty_df = pd.read_csv('temp_data/grants_history.csv', sep="~")
-    descriptions = faculty_df['Title']
+        Computes TF-IDF over entire faculty corpus """  
+    faculty_df = pd.read_csv('temp_data/complete_cleaned_faculty_webpages.csv', delimiter=",")
+    faculty_df = faculty_df[pd.notnull(faculty_df['cleaned_str_text'])]
+    faculty_df.reset_index(drop=True)
+    descriptions = faculty_df['cleaned_str_text']
+    cleaned = []
     for desc in descriptions:
         try:
             desc = desc.lower()
-            desc = desc.translate
-    faculty_cleaned = []
-    punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
-    num_trans = str.maketrans('', '', '123456789')
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda x: x not in sw, desc.split())
+            second = [wnl.lemmatize(x) for x in first]
+            cleaned.append(second)
+        except:
+            cleaned.append(["Nothing"])
+
+    faculty_corpus = [' '.join(doc) for doc in cleaned]
+    faculty_vectorizer = TfidfVectorizer()
+    faculty_matrix = faculty_vectorizer.fit_transform(faculty_corpus)
+
+    with open('faculty_vectorizer.pkl', 'wb') as output:
+        pickle.dump(faculty_vectorizer, output, -1)
+
+    """ Preprocessing grants data """
+    grants_df = pd.read_csv('temp_data/grants_gov.csv', delimiter="~")
+    descriptions = grants_df['Description']
+    cleaned = []
     for desc in descriptions:
         try:
             desc = desc.lower()
@@ -206,82 +241,13 @@ def init_vocab_and_faculty_profiles(cur):
             cleaned.append(second)
         except:
             cleaned.append(["Nothing"])
-    faculty_corpus = [' '.join(doc) for doc in faculty_cleaned]
-    faculty_vectorizer = TfidfVectorizer()
-    faculty_matrix = faculty_vectorizer.fit_transform(faculty_corpus)
-    faculty_vocab = dict(faculty_vectorizer.vocabulary_)
-    for word in faculty_vocab:
-        faculty_vocab[word] = int(faculty_vocab[word])
-    faculty_vocab_json = json.dumps(faculty_vocab)
 
-    """ Preprocessing grants data """
-    grants_df = pd.read_csv('temp_data/grants_gov.csv', sep="~")
-    descriptions = grants_df['Description']
-    for desc in descriptions:
-        try:
-            desc = desc.lower()
-            desc = desc.translate
-    grants_cleaned = []
-    for desc in descriptions:
-        try:
-            desc = desc.lower()
-            desc = desc.translate(punc_trans)
-            desc = desc.translate(num_trans)
-            first = = filter(lambda word: word not in sw, desc.split())
-            second = [wnl.lemmatize(word) for word in first]
-            cleaned.append(second)
-        except:
-            cleaned.append(["Nothing"])
-    grants__corpus = [' '.join(doc) for doc in grants_cleaned]
+    grants_corpus = [' '.join(doc) for doc in cleaned]
     grants_vectorizer = TfidfVectorizer(max_df=30000)
     grants_matrix = grants_vectorizer.fit_transform(grants_corpus)
-    grants_vocab = dict(grants_vectorizer.vocabulary_)
-    for word in grants_vocab:
-        grants_vocab[word] = int(grants_vocab[word])
-    grants_vocab_json = json.dumps(grants_vocab)
 
-    """ Initializing faculty profiles """
-    """
-    # Uses faculty specific vocabulary
-    faculty_profiles = defaultdict(list)
-    for index, row in faculty_df.iterrrows():
-        faculty_profiles[row["PI Name"]].append(faculty_matrix[index])
-    for faculty in faculty_profiles:
-        mean = np.mean(faculty_profiles[faculty])
-        for i in range(len(mean)):
-            mean[i] = float(mean[i])
-        faculty_profiles[faculty] = json.dumps(list(mean))
-    """
-    faculty_profiles = defaultdict(list)
-    for index, row in faculty_df.iterrows():
-        faculty_profiles[row["PI Name"]].append(row["Title"])
-    faculty_vectorizer = TfidfVectorizer(vocabulary=grants_vectorizer.vocabulary_)
-    for faculty in faculty_profiles:
-        research = faculty_profiles[faculty]
-        vectorized = faculty_vectorizer.fit_transform(research)
-        mean = np.mean(vectorized, axis=0)
-        for i in range(len(mean)):
-            mean[i] = float(mean[i])
-        faculty_profiles[faculty] = json.dumps(list(mean))
-
-    """ Initializing grants profiles """
-    grants_profiles = {}
-    for index, row in grant_df.iterrrows():
-        profile = grants_matrix[i]
-        for i in range(len(profile)):
-            profile[i] = float(profile[i])
-        grants_profiles[row["OpportunityTitle"]] = json.dumps(list(profile))
-
-    vocab_stmt = "INSERT INTO vocabulary (source, vocab) VALUES (%s, %s)"
-    vocab_rows = [('faculty', faculty_vocab_json), ('grants', grants_vocab_json)]
-    faculty_stmt = "INSERT INFO faculty_profiles (name, profile) VALUES (%s, %s)"
-    faculty_rows = faculty_profiles.items()
-    grants_stmt = "INSERT INFO grants_profiles (name, profile) VALUES (%s, %s)"
-    grants_rows = grants_profiles.items()
-
-    cur.executemany(vocab_stmt, vocab_rows)
-    cur.executemany(faculty_stmt, faculty_rows)
-    cur.executemany(grants_stmt, grants_rows)
+    with open('grants_vectorizer.pkl', 'wb') as output:
+        pickle.dump(grants_vectorizer, output, -1)
 
 def init_faculty_webpages(cur):
     df = pd.read_csv('temp_data/complete_cleaned_faculty_webpages.csv')
