@@ -1,4 +1,5 @@
 import MySQLdb
+import pickle
 
 # from flaskr.flaskr.data_management.format_grant_data_sources import format_grants_gov_data
 import flaskr.flaskr.data_management.database_utilities as db_utils
@@ -39,6 +40,21 @@ def get_faculty_vcr(faculty_name):
     rows = cur.fetchall()
 
     return QueryResponse(rows, [l[0] for l in cur.description])
+
+def get_faculty_grants():
+    cur = db.cursor()
+    cur.execute('''SELECT * FROM faculty_grants;''')
+    rows = cur.fetchall()
+
+    return QueryResponse(rows, [l[0] for l in cur.description])
+
+def get_faculty_vectorizer():
+    with open('faculty_vectorizer.pkl', 'rb') as input:
+        return pickle.load(input)
+
+def get_grants_vectorizer():
+    with open('grants_vectorizer.pkl', 'rb') as input:
+        return pickle.load(input)
 
 def get_faculty_names():
     cur = db.cursor()

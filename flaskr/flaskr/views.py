@@ -76,3 +76,12 @@ def show_faculty_search():
     faculty_search_html = render_template('faculty_search.html', faculty_names=faculty_names)
 
     return render_page_with_html(faculty_search_html, 'faculty_search')
+
+def get_faculty_vectorizer():
+    with open('database_management/faculty_vectorizer.pkl', 'rb') as input:
+        return pickle.load(input)
+
+def get_grants_vectorizer():
+    print("DF")
+    with open('database_management/grants_vectorizer.pkl', 'rb') as input:
+        return pickle.load(input)
