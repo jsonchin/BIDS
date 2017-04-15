@@ -116,25 +116,6 @@ def init_drop_and_create_tables(cur):
                 PRIMARY KEY(grant_title, grant_info_url)
             );""")
 
-
-def split_first_last_name(s):
-    """
-    Find highest two 'words', those are the first and last name by order
-    """
-    l = s.lower().split(' ')
-    lengths = [len(w) for w in l]
-    max_index = max(range(len(l)), key=lambda i: lengths[i])
-    max_word = l[max_index]
-    lengths[max_index] = -1
-
-    max_index2 = max(range(len(l)), key=lambda i: lengths[i])
-    max_word2 = l[max_index2]
-
-    if max_index < max_index2:
-        return max_word, max_word2
-    else:
-        return max_word2, max_word
-
 def init_faculty_vcr(cur):
     """
     Reads 'faculty_vcr.csv' from temp_data and inserts it into table faculty_vcr
@@ -234,5 +215,28 @@ def init_grants(cur):
     # old code before ON DUPLICATE KEY UPDATE
     # sql = """INSERT INTO grants VALUES (""" + (" %s," * (len(grants_db_column_names) - 1)) + """ %s )"""
     # cur.executemany(sql, rows)
+
+
+######################
+## Helper Functions ##
+######################
+
+def split_first_last_name(s):
+    """
+    Find highest two 'words', those are the first and last name by order
+    """
+    l = s.lower().split(' ')
+    lengths = [len(w) for w in l]
+    max_index = max(range(len(l)), key=lambda i: lengths[i])
+    max_word = l[max_index]
+    lengths[max_index] = -1
+
+    max_index2 = max(range(len(l)), key=lambda i: lengths[i])
+    max_word2 = l[max_index2]
+
+    if max_index < max_index2:
+        return max_word, max_word2
+    else:
+        return max_word2, max_word
 
 init_db()

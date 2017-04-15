@@ -17,20 +17,9 @@ TABS = [
         ('Faculty Search', '/faculty_search')
     ]
 
-def render_page(html_file_name, css_files, js_files):
-    return render_page_with_html(render_template(html_file_name), css_files, js_files)
-
-def render_page_with_html(html, css_files, js_files):
-    # Initialize tabs for the sidebar
-    tabs_d = []
-    for tab in TABS:
-        tabs_d.append({'name':tab[0], 'route':tab[1]})
-
-    return render_template('page_template.html',
-                           tabs_d=tabs_d,
-                           main_content=html,
-                           css_files=[url_for('static', filename='css/{}'.format(file_name)) for file_name in css_files],
-                           js_files=[url_for('static', filename='js/{}'.format(file_name)) for file_name in js_files])
+###########
+## Views ##
+###########
 
 @app.route('/')
 def show_index():
@@ -69,3 +58,25 @@ def show_faculty_search():
     return render_page_with_html(faculty_search_html,
                                  ['faculty_search.css', 'faculty_card.css', 'grant_card.css'],
                                  ['faculty_search.js', 'card.js'])
+
+
+######################
+## Helper Functions ##
+######################
+
+# All pages built with page_template.html and page.css as the base template
+
+def render_page(html_file_name, css_files, js_files):
+    return render_page_with_html(render_template(html_file_name), css_files, js_files)
+
+def render_page_with_html(html, css_files, js_files):
+    # Initialize tabs for the sidebar
+    tabs_d = []
+    for tab in TABS:
+        tabs_d.append({'name':tab[0], 'route':tab[1]})
+
+    return render_template('page_template.html',
+                           tabs_d=tabs_d,
+                           main_content=html,
+                           css_files=[url_for('static', filename='css/{}'.format(file_name)) for file_name in css_files],
+                           js_files=[url_for('static', filename='js/{}'.format(file_name)) for file_name in js_files])

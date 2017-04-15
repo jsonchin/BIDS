@@ -1,27 +1,15 @@
 from flask import request, url_for, render_template
 
 from flaskr.flaskr import app
-from flaskr.flaskr.data_management.database import *
 from .utility import *
 from .matching import *
 
 import os
 
 
-def get_faculty_profile_img(faculty_name):
-    """
-    Gets the faculty_profile_img path for a faculty_name if it exists, otherwise output default_img path
-    :param faculty_name: str
-    :return: str path to img
-    """
-    img_path = url_for('static', filename='images/faculty_images/{}'.format(faculty_name))
-    return img_path
-
-    # for now do this until deploying on ocf/server
-
-    if not os.path.exists(img_path):
-        return url_for('static', filename='images/faculty_images/default_img')
-    return img_path
+#########################
+## HTTP Request Routes ##
+#########################
 
 @app.route('/faculty_search_query', methods=['POST'])
 def get_faculty_query_html():
@@ -75,9 +63,42 @@ def get_top_k_grants_for_faculty_html():
     corpus = request.form['corpus']
     return get_top_k_grants_html(corpus, show_faculty_matches=False)
 
+@app.route('/get_k_more_grants', methods=['POST'])
+def get_k_more_grants_html():
+    """
+    Given an offset and k in a POST request, returns html that shows the next k grants
+    :return: html
+    """
+    offset = int(request.form.get('offset', 0))
+    k = int(request.form.get('k', 10))
+    qr = get_offset_k_recent_grants(k=k, offset=offset)
+    grants_l = qr.rows
+    column_names = qr.column_names
+    grants = []
+    for row in grants_l:
+        grants.append({col:row_val for col, row_val in zip(column_names, row)})
+
+    return render_template('response/k_grants.html', grants=grants, show_faculty_matches=True)
 
 
-def get_top_k_faculty_html(corpus, k=10, is_faculty_matching=True):
+
+######################
+## Helper Functions ##
+######################
+
+
+def get_faculty_profile_img(faculty_name):
+    """
+    Gets the faculty_profile_img path for a faculty_name if it exists, otherwise output default_img path
+    :param faculty_name: str
+    :return: str path to img
+    """
+    img_path = url_for('static', filename='images/faculty_images/{}'.format(faculty_name))
+    if not os.path.isfile(img_path[1:].replace('%20', ' ')):
+        return url_for('static', filename='images/faculty_images/default_img')
+    return img_path
+
+def get_top_k_faculty_html(corpus, k=5, is_faculty_matching=True):
     faculty_matches = get_k_closest_faculty(corpus, k=k)
 
     for faculty_d in faculty_matches:
@@ -89,31 +110,6 @@ def get_top_k_faculty_html(corpus, k=10, is_faculty_matching=True):
 def get_top_k_grants_html(corpus, k=10, show_faculty_matches=True):
     grant_matches = get_k_closest_grants(corpus, k)
     return render_template('response/k_grants.html', grants=grant_matches, show_faculty_matches=show_faculty_matches)
-
-
-
-@app.route('/get_k_more_grants', methods=['POST'])
-def get_k_more_grants_html():
-    """
-    Given an offset and k in a POST request, returns html that shows the next k grants
-    :return: html
-    """
-    try:
-        offset = int(request.form['offset'])
-    except:
-        offset = 0
-    try:
-        k = int(request.form['k'])
-    except:
-        k = 10
-    qr = get_offset_k_recent_grants(k=k, offset=offset)
-    grants_l = qr.rows
-    column_names = qr.column_names
-    grants = []
-    for row in grants_l:
-        grants.append({col:row_val for col, row_val in zip(column_names, row)})
-
-    return render_template('response/k_grants.html', grants=grants, show_faculty_matches=True)
 
 
 

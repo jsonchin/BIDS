@@ -19,7 +19,6 @@ function initializeReadMore () {
             + '</span>&nbsp;&nbsp;<a class="morelink">' + moretext + '</a></span>';
 
         $(this).html(html);
-        $(this).parent().parent().css("height", "auto");
     }
 }
 
