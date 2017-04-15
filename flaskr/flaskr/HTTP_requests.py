@@ -40,11 +40,11 @@ def get_faculty_query():
 
 @app.route('/manual_grant_submit', methods=['POST'])
 def post_manual_grant():
-    print(1)
-    faculty_grants = get_faculty_grants().rows
-    print(2)
-    grants_vectorizer = get_grants_vectorizer()
-    print(3)
+    #print(1)
+    #faculty_grants = get_faculty_grants().rows
+    #print(2)
+    #grants_vectorizer = get_grants_vectorizer()
+    #print(3)
     
     # Need to store into db
 
@@ -54,6 +54,7 @@ def post_manual_grant():
     grant_amount = request.form['inputGrantAmt']
     grant_info = request.form['inputURLAdditionalInfo']
 
+    # Cleaning up new grant description
     desc = grant_description
     try:
         desc = desc.lower()
@@ -69,16 +70,25 @@ def post_manual_grant():
 
     new_grant = grants_vectorizer.transform(cleaned).T
 
-    closest_grants = []
-    for title, faculty in faculty_grants:
-        old_grant = grants_vectorizer.transform([title])
-        # Uses dot similarity
-        closest_grants.append((np.dot(old_grant, new_grant).toarray()[0][0], faculty))
-        # closest_grants.append((np.dot(training_grant, test_grant.T), index)) <--- For SVD
-        
-    # Finds the 10 grants that are closest to the test grant
-    max_product = max(closest_grants)[0]
-    faculty_and_score = [(x[0] / max_product, x[1]) for x in sorted(closest_grants)[-5:]]
+    #closest_grants = []
+    #for title, faculty in faculty_grants:
+    #    old_grant = grants_vectorizer.transform([title])
+    #    # Uses dot similarity
+    #    closest_grants.append((np.dot(old_grant, new_grant).toarray()[0][0], faculty))
+    #    # closest_grants.append((np.dot(training_grant, test_grant.T), index)) <--- For SVD
+    #    
+    ## Finds the 10 grants that are closest to the test grant
+    #max_product = max(closest_grants)[0]
+    #faculty_and_score = [(x[0] / max_product, x[1]) for x in sorted(closest_grants)[-5:]]
+
+    similarities = np.dot(faculty_grants_matrix, new_grant)
+    max_product = np.max(similarities)
+    closest_grants = np.argsort(similarities.toarray(), axis=0)[-5:].reshape(5,)
+    print(closest_grants.shape)
+    faculty_and_score = []
+    for index in closest_grants:
+        faculty_and_score.append((faculty_list[index], similarities[index].toarray()[0][0] / max_product))
+
     print(faculty_and_score)
     return ''
 
@@ -109,3 +119,18 @@ def get_faculty_vectorizer():
 def get_grants_vectorizer():
     with open('data_management/grants_vectorizer.pkl', 'rb') as input:
         return pickle.load(input)
+
+def create_faculty_grants_matrix():
+    print(1)
+    faculty_grants = get_faculty_grants().rows
+    corpus, faculty_list = [], []
+    for title, faculty in faculty_grants:
+        corpus.append(title)
+        faculty_list.append(faculty)
+    faculty_grants_matrix = grants_vectorizer.transform(corpus)
+    print(2)
+    return faculty_grants_matrix, faculty_list
+    
+faculty_vectorizer = get_grants_vectorizer()
+grants_vectorizer = get_grants_vectorizer()
+faculty_grants_matrix, faculty_list = create_faculty_grants_matrix()
