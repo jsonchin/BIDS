@@ -1,8 +1,8 @@
 import MySQLdb
 
 # from flaskr.flaskr.data_management.format_grant_data_sources import format_grants_gov_data
-import flaskr.flaskr.data_management.database_utilities as db_utils
-import flaskr.flaskr.data_management.database_info as db_info
+from .database_utilities import *
+from .database_info import *
 
 
 db =MySQLdb.connect(
@@ -82,11 +82,11 @@ def get_faculty_all_specific(faculty_name):
 def insert_grant(grant_d):
     cur = db.cursor()
 
-    sql = '''INSERT INTO grants_user_input VALUES ( ''' + ("%s, "*(len(db_info.grants_db_column_names) - 1)) + "%s )"
+    sql = '''INSERT INTO grants_user_input VALUES ( ''' + ("%s, "*(len(grants_db_column_names) - 1)) + "%s )"
 
-    grant_d[db_info.grants_db_column_names[-1]] = db_utils.get_current_time() #grant_db_insert_date
+    grant_d[grants_db_column_names[-1]] = get_current_time() #grant_db_insert_date
 
-    cur.execute(sql, [grant_d[col] for col in db_info.grants_db_column_names])  # SANITIZE PLEASE!
+    cur.execute(sql, [grant_d[col] for col in grants_db_column_names])  # SANITIZE PLEASE!
     cur.close()
 
     db.commit()
@@ -137,7 +137,7 @@ def remove_outdated_grants():
     :return:
     """
     cur = db.cursor()
-    today_date = db_utils.get_current_date()
+    today_date = get_current_date()
     sql = """DELETE FROM grants WHERE grant_closing_date < %s;"""
     cur.execute(sql, [today_date])
     sql = """DELETE FROM grants_user_input WHERE grant_closing_date < %s;"""

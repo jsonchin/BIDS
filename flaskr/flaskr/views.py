@@ -1,6 +1,6 @@
 from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
 
-from flaskr.flaskr import app
+from .flaskr import app
 
 from .data_management.database import *
 

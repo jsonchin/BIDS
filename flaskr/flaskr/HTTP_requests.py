@@ -1,6 +1,6 @@
 from flask import request, url_for, render_template
 
-from flaskr.flaskr import app
+from .flaskr import app
 from .utility import *
 from .matching import *
 
