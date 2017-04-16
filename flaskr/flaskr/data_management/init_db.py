@@ -93,7 +93,7 @@ def init_drop_and_create_tables(cur):
             grant_description TEXT,
             grant_posted_date VARCHAR(10),
             grant_closing_date VARCHAR(10),
-            grant_info_url VARCHAR(80),
+            grant_info_url VARCHAR(100),
             grant_sponsor TEXT,
             grant_award_floor TEXT,
             grant_award_ceiling TEXT,
@@ -108,7 +108,7 @@ def init_drop_and_create_tables(cur):
                 grant_description TEXT,
                 grant_posted_date DATE,
                 grant_closing_date DATE,
-                grant_info_url VARCHAR(80),
+                grant_info_url VARCHAR(100),
                 grant_sponsor TEXT,
                 grant_award_floor TEXT,
                 grant_award_ceiling TEXT,
@@ -116,29 +116,14 @@ def init_drop_and_create_tables(cur):
                 PRIMARY KEY(grant_title, grant_info_url)
             );""")
 
-
-def split_first_last_name(s):
-    """
-    Find highest two 'words', those are the first and last name by order
-    """
-    l = s.lower().split(' ')
-    lengths = [len(w) for w in l]
-    max_index = max(range(len(l)), key=lambda i: lengths[i])
-    max_word = l[max_index]
-    lengths[max_index] = -1
-
-    max_index2 = max(range(len(l)), key=lambda i: lengths[i])
-    max_word2 = l[max_index2]
-
-    if max_index < max_index2:
-        return max_word, max_word2
-    else:
-        return max_word2, max_word
-
 def init_faculty_vcr(cur):
+    """
+    Reads 'faculty_vcr.csv' from temp_data and inserts it into table faculty_vcr
+    :param cur:
+    :return:
+    """
     df = pd.read_csv('temp_data/faculty_vcr.csv', sep='~')
 
-    # df = df.fillna('')
     df = df.where(pd.notnull(df), None)
 
     first_last_names = df['faculty_name'].apply(split_first_last_name)
@@ -160,9 +145,13 @@ def init_faculty_vcr(cur):
     cur.executemany(sql, rows)
 
 def init_faculty_webpages(cur):
+    """
+    Reads 'complete_cleaned_faculty_weboages.csv' from temp_data and inserts it into table faculty_webpages
+    :param cur:
+    :return:
+    """
     df = pd.read_csv('temp_data/complete_cleaned_faculty_webpages.csv')
 
-    # df = df.fillna('')
     df = df.where(pd.notnull(df), None)
 
     df = df.drop_duplicates('full_name')
@@ -179,6 +168,13 @@ def init_faculty_webpages(cur):
     cur.executemany(sql, rows)
 
 def init_grants(cur):
+    """
+    Reads all of the grant csv files from temp_data and inserts/updates them into grants
+        -grants.gov
+        -nsf
+    :param cur:
+    :return:
+    """
     grants_db_column_names = [
         'grant_title',
         'grant_description',
@@ -191,22 +187,56 @@ def init_grants(cur):
         'grant_db_insert_date'
     ]
 
-    sql = """INSERT INTO grants VALUES (""" + (" %s," * (len(grants_db_column_names) - 1)) + """ %s )"""
+    # don't update the grant_db_insert_date because we want the initial insert date
+    update_sql = ', '.join(['`{}`=VALUES(`{}`)'.format(col, col) for col in grants_db_column_names[:-1]])
 
-    #get data sources data
-    #combine into one big list
-    #insert many
+    insert_on_duplicate_update_sql = """INSERT INTO grants VALUES (""" + (" %s," * (len(grants_db_column_names) - 1)) + """ %s )
+            ON DUPLICATE KEY UPDATE """ + update_sql
 
     # grants.gov
     grants_gov_df = format_grants_gov_data()
 
-    grants_gov_df = grants_gov_df.drop_duplicates(['grant_title', 'grant_info_url'])
+    grants_df = grants_gov_df.drop_duplicates(['grant_title', 'grant_info_url'])
+
+    # nsf
+    nsf_df = format_nsf_data()
+
+    grants_df = grants_df[~grants_df['grant_title'].isnull()]
+    # put grants gov first so it drops nsf duplicates
+    grants_df = grants_df.append(nsf_df).drop_duplicates(['grant_title', 'grant_info_url'])
 
     rows = []
-    for row in grants_gov_df.iterrows():
+    for row in grants_df.iterrows():
         rows.append(row[1].values.tolist())
 
-    cur.executemany(sql, rows)
+    cur.executemany(insert_on_duplicate_update_sql, rows)
 
+
+    # old code before ON DUPLICATE KEY UPDATE
+    # sql = """INSERT INTO grants VALUES (""" + (" %s," * (len(grants_db_column_names) - 1)) + """ %s )"""
+    # cur.executemany(sql, rows)
+
+
+######################
+## Helper Functions ##
+######################
+
+def split_first_last_name(s):
+    """
+    Find highest two 'words', those are the first and last name by order
+    """
+    l = s.lower().split(' ')
+    lengths = [len(w) for w in l]
+    max_index = max(range(len(l)), key=lambda i: lengths[i])
+    max_word = l[max_index]
+    lengths[max_index] = -1
+
+    max_index2 = max(range(len(l)), key=lambda i: lengths[i])
+    max_word2 = l[max_index2]
+
+    if max_index < max_index2:
+        return max_word, max_word2
+    else:
+        return max_word2, max_word
 
 init_db()

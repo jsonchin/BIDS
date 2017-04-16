@@ -1,11 +1,5 @@
-<h1>{{ faculty_name }}</h1>
+<div class="faculty-card-container">
+    {{ faculty_card_html|safe }}
+</div>
 
-<img src="{{ faculty_img }}">
-
-<p>{{ faculty_email }}</p>
-
-<p>{{ department }}</p>
-
-<p>{{ l_expertise }}</p>
-
-<p>{{ description }}</p>
+{{ grant_matches_html|safe }}
