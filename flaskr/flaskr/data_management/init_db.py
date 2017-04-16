@@ -1,3 +1,17 @@
+from collections import defaultdict
+from IPython.display import display
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import json
+import nltk.stem.wordnet as wordnet
+import numpy as np
+import pickle
+import random
+import sklearn
+import string
+import time
+
 import pandas as pd
 
 # from flaskr.flaskr.data_management.format_grant_data_sources import *
@@ -5,6 +19,7 @@ import pandas as pd
 from format_grant_data_sources import *
 
 import MySQLdb
+
 
 db =MySQLdb.connect(
     host='127.0.0.1',
@@ -30,6 +45,10 @@ def init_db():
 
     init_grants(cur)
 
+    init_faculty_previous_grants(cur)
+
+    create_vectorizers()
+
     db.commit()
 
 
@@ -43,6 +62,7 @@ def init_drop_and_create_tables(cur):
     cur.execute("""DROP TABLE IF EXISTS faculty_vcr;""")
     cur.execute("""DROP TABLE IF EXISTS grants;""")
     cur.execute("""DROP TABLE IF EXISTS grants_user_input;""")
+    cur.execute("""DROP TABLE IF EXISTS faculty_grants;""")
     cur.execute("""CREATE TABLE faculty_vcr (
             faculty_name VARCHAR(50) NOT NULL,
             faculty_profile_url VARCHAR(200),
@@ -115,6 +135,11 @@ def init_drop_and_create_tables(cur):
                 grant_db_insert_date DATE,
                 PRIMARY KEY(grant_title, grant_info_url)
             );""")
+
+    cur.execute("""CREATE TABLE faculty_grants (
+                    title TEXT,
+                    faculty TEXT
+                );""")
 
 def init_faculty_vcr(cur):
     """
@@ -215,6 +240,76 @@ def init_grants(cur):
     # old code before ON DUPLICATE KEY UPDATE
     # sql = """INSERT INTO grants VALUES (""" + (" %s," * (len(grants_db_column_names) - 1)) + """ %s )"""
     # cur.executemany(sql, rows)
+
+def init_faculty_previous_grants(cur):
+    """ Initialize faculty previous grants from research_grant_history """
+    punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
+    faculty_grants = {}
+    grant_history_df = pd.read_csv('temp_data/research_grant_history.csv', delimiter=",")
+    for index, row in grant_history_df.iterrows():
+        name = row['PI Name'].lower().translate(punc_trans)
+        name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
+        faculty_grants[row['Title']] = name
+
+    faculty_grants_stmt = "INSERT INTO faculty_grants (title, faculty) VALUES (%s, %s)"
+    faculty_grants_rows = faculty_grants.items()
+
+    cur.executemany(faculty_grants_stmt, faculty_grants_rows)
+
+def create_vectorizers():
+    """ Create faculty_vectorizer and grant_vectorizer """
+    sw = set(stopwords.words('english'))
+    wnl = wordnet.WordNetLemmatizer()
+    punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
+    num_trans = str.maketrans('', '', '123456789')
+
+    """ Preprocessing faculty data
+        Computes TF-IDF over entire faculty corpus """
+    faculty_df = pd.read_csv('temp_data/complete_cleaned_faculty_webpages.csv', delimiter=",")
+    faculty_df = faculty_df[pd.notnull(faculty_df['cleaned_str_text'])]
+    faculty_df.reset_index(drop=True)
+    descriptions = faculty_df['cleaned_str_text']
+    cleaned = []
+    for desc in descriptions:
+        try:
+            desc = desc.lower()
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda x: x not in sw, desc.split())
+            second = [wnl.lemmatize(x) for x in first]
+            cleaned.append(second)
+        except:
+            cleaned.append(["Nothing"])
+
+    faculty_corpus = [' '.join(doc) for doc in cleaned]
+    faculty_vectorizer = TfidfVectorizer()
+    faculty_matrix = faculty_vectorizer.fit_transform(faculty_corpus)
+
+    with open('temp_data/faculty_vectorizer.pkl', 'wb') as output:
+        pickle.dump(faculty_vectorizer, output, -1)
+
+    """ Preprocessing grants data """
+    grants_df = pd.read_csv('temp_data/grants_gov.csv', delimiter="~")
+    descriptions = grants_df['Description']
+    cleaned = []
+    for desc in descriptions:
+        try:
+            desc = desc.lower()
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda word: word not in sw, desc.split())
+            second = [wnl.lemmatize(word) for word in first]
+            cleaned.append(second)
+        except:
+            cleaned.append(["Nothing"])
+
+    grants_corpus = [' '.join(doc) for doc in cleaned]
+    grants_vectorizer = TfidfVectorizer(max_df=30000)
+    grants_matrix = grants_vectorizer.fit_transform(grants_corpus)
+
+    with open('temp_data/grants_vectorizer.pkl', 'wb') as output:
+        pickle.dump(grants_vectorizer, output, -1)
+
 
 
 ######################

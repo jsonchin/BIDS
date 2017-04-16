@@ -11,12 +11,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 from .data_management.database import *
 
-glove_d = {} #should pickle this or store as json
-tfidf_vectorizer = None
-df_faculty = None
-df_grants = None
-
-
 UNDEFINED_GLOVE_VEC = np.ones(100) * 10000
 
 def text_to_bag(text):
@@ -152,47 +146,38 @@ def bag_to_vec(sentence):
         return UNDEFINED_GLOVE_VEC
 
 def initialize_glove():
-    if len(glove_d) == 0:
-        with open('data_management/temp_data/glove.json', 'r') as f:
-            json_d = json.load(f)
-            for word in json_d:
-                glove_d[word] = np.array(json_d[word])
+    glove_d = {}
+    with open('data_management/temp_data/glove.json', 'r') as f:
+        json_d = json.load(f)
+        for word in json_d:
+            glove_d[word] = np.array(json_d[word])
+    return glove_d
 
 def initialize_faculty():
-    global df_faculty
+    qr = get_faculty_webpages()
+    col_names = qr.column_names
+    rows = np.array(qr.rows)
 
-    if df_faculty is None:
-        qr = get_faculty_webpages()
-        col_names = qr.column_names
-        rows = np.array(qr.rows)
+    df_faculty = pd.DataFrame(data=rows, columns=col_names)
 
-        df_faculty = pd.DataFrame(data=rows, columns=col_names)
+    def split_sentence(s):
+        try:
+            return s.split(' ')
+        except:
+            return s
 
-        def split_sentence(s):
-            try:
-                return s.split(' ')
-            except:
-                return s
-
-        df_faculty['glove_vec'] = df_faculty['faculty_webpage_content'].apply(split_sentence).apply(bag_to_vec)
+    df_faculty['glove_vec'] = df_faculty['faculty_webpage_content'].apply(split_sentence).apply(bag_to_vec)
+    return df_faculty
 
 def initialize_grants():
-    global df_grants
+    qr = get_all_grants()
+    col_names = qr.column_names
+    rows = np.array(qr.rows)
 
-    if df_grants is None:
-        qr = get_all_grants()
-        col_names = qr.column_names
-        rows = np.array(qr.rows)
+    df_grants = pd.DataFrame(data=rows, columns=col_names)
 
-        df_grants = pd.DataFrame(data=rows, columns=col_names)
-
-        def split_sentence(s):
-            try:
-                return s.split(' ')
-            except:
-                return s
-
-        df_grants['glove_vec'] = df_grants['grant_description'].apply(text_to_bag).apply(bag_to_vec)
+    df_grants['glove_vec'] = df_grants['grant_description'].apply(text_to_bag).apply(bag_to_vec)
+    return df_grants
 
 
 
@@ -213,10 +198,6 @@ def get_k_closest_faculty(corpus, k=5):
     :param k: integer
     :return: list of dictionaries (keys are vcr columns)
     """
-    initialize_glove()
-    initialize_faculty()
-    initialize_grants()
-
     corpus_bag = text_to_bag(corpus)
 
     corpus_vec = bag_to_vec(corpus_bag)
@@ -253,10 +234,6 @@ def get_k_closest_grants(corpus, k=5):
     :param k: integer
     :return: list of dictionaries (keys are vcr columns)
     """
-    initialize_glove()
-    initialize_faculty()
-    initialize_grants()
-
     corpus_bag = text_to_bag(corpus)
 
     corpus_vec = bag_to_vec(corpus_bag)
@@ -280,3 +257,8 @@ def get_k_closest_grants(corpus, k=5):
         grant_matches_info.append(grant_info_d)
 
     return grant_matches_info
+
+
+glove_d = initialize_glove()
+df_faculty = initialize_faculty()
+df_grants = initialize_grants()

@@ -43,6 +43,12 @@ def get_faculty_vcr(faculty_name):
     rows = cur.fetchall()
     return QueryResponse(rows, [l[0] for l in cur.description])
 
+def get_faculty_grants():
+    cur = db.cursor()
+    cur.execute('''SELECT * FROM faculty_grants;''')
+    rows = cur.fetchall()
+    return QueryResponse(rows, [l[0] for l in cur.description])
+
 def get_faculty_names():
     cur = db.cursor()
     cur.execute('''SELECT faculty_name FROM faculty_vcr;''')
