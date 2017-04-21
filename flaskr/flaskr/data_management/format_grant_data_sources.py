@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy
+from datetime import datetime
 
 import database_utilities as db_utils
 import database_info as db_info
@@ -49,7 +50,8 @@ def unescape_str(s):
                              .replace('\xa0', '') \
                              .replace('’', "'") \
                              .replace('&lt;p&gt;', '') \
-                             .replace('&quot;', '"'))
+                             .replace('&quot;', '"') \
+                             .replace('™', ''))
     except:
         return None
 
@@ -61,8 +63,10 @@ def format_grants_gov_data(file_name='temp_data/grants_gov.csv'):
     df = pd.read_csv(file_name, sep='~', encoding='utf-8')
 
     def format_date_str(date_str):
+        """
+        '08-22-2014' -> '2014-08-22'
+        """
         try:
-            '08-22-2014'
             return date_str[-4:] + '-' + date_str[:5]
         except:
             return date_str
@@ -132,5 +136,62 @@ def format_nsf_data(file_name='temp_data/nsf.csv'):
 
     df = df.where(pd.notnull(df), None)
 
+    return df
+
+def format_usda_data(file_name='temp_data/usda.csv'):
+    """
+    :param file_name: path to usda csv file
+    :return: pandas df with columns corresponding to grants_db_columns_names
+    """
+    df = pd.read_csv(file_name, sep='~')
+
+    curr_date_str = db_utils.get_current_date()
+    df['Close Date'][df['Close Date'] == 'Not listed'] = None
+
+    df = df[df['Close Date'].apply(lambda date_str: filter_deadline_passed(date_str, curr_date_str))]
+
+    df['AgencyName'] = 'Department of Agriculture'
+    df['grant_db_insert_date'] = curr_date_str
+
+    def format_award_amount(s):
+        try:
+            return s.replace('$', '').strip()
+        except:
+            return s
+
+    df['Award Range Floor'] = df['Award Range Floor'].apply(format_award_amount)
+    df['Award Range Ceiling'] = df['Award Range Ceiling'].apply(format_award_amount)
+
+    def format_str_date(s):
+        """
+        :param s: str Sunday, September 30, 2018
+        :return: str 2018-09-30
+        """
+        try:
+            return datetime.strptime(s[s.index(',') + 2:], '%B %d, %Y').strftime('%Y-%m-%d')
+        except:
+            return s
+
+    df['Posted Date'] = df['Posted Date'].apply(format_str_date)
+    df['Close Date'] = df['Close Date'].apply(format_str_date)
+
+
+    l_cols = ['Headline',
+              'Description',
+              'Posted Date',
+              'Close Date',
+              'Link',
+              'AgencyName',
+              'Award Range Floor',
+              'Award Range Ceiling',
+              'grant_db_insert_date']
+
+
+    df = df[l_cols]
+    df.columns = db_info.grants_db_column_names
+    df['grant_title'] = df['grant_title'].apply(unescape_str)
+    df['grant_description'] = df['grant_description'].apply(unescape_str)
+
+    df = df.where(pd.notnull(df), None)
 
     return df

@@ -1,5 +1,4 @@
 from collections import defaultdict
-from IPython.display import display
 from nltk.corpus import stopwords
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -14,8 +13,6 @@ import time
 
 import pandas as pd
 
-# from flaskr.flaskr.data_management.format_grant_data_sources import *
-
 from format_grant_data_sources import *
 
 import MySQLdb
@@ -29,7 +26,7 @@ db =MySQLdb.connect(
 )
 
 
-def init_db():
+def init_db(inserting_grants=True):
     cur = db.cursor()
 
     db.set_character_set('utf8')
@@ -37,17 +34,19 @@ def init_db():
     cur.execute('SET CHARACTER SET utf8;')
     cur.execute('SET character_set_connection=utf8;')
 
-    init_drop_and_create_tables(cur)
+    if inserting_grants:
+        init_drop_and_create_tables(cur)
 
-    init_faculty_vcr(cur)
+        init_faculty_vcr(cur)
 
-    init_faculty_webpages(cur)
+        init_faculty_webpages(cur)
 
     init_grants(cur)
 
-    init_faculty_previous_grants(cur)
+    if inserting_grants:
+        init_faculty_previous_grants(cur)
 
-    create_vectorizers()
+        create_vectorizers()
 
     db.commit()
 
@@ -221,14 +220,18 @@ def init_grants(cur):
     # grants.gov
     grants_gov_df = format_grants_gov_data()
 
-    grants_df = grants_gov_df.drop_duplicates(['grant_title', 'grant_info_url'])
-
     # nsf
     nsf_df = format_nsf_data()
 
+    # usda
+    usda_df = format_usda_data()
+
+    grants_df = grants_gov_df
     grants_df = grants_df[~grants_df['grant_title'].isnull()]
     # put grants gov first so it drops nsf duplicates
-    grants_df = grants_df.append(nsf_df).drop_duplicates(['grant_title', 'grant_info_url'])
+    grants_df = grants_df.append(nsf_df)\
+                            .append(usda_df)\
+                                .drop_duplicates(['grant_title', 'grant_info_url'])
 
     rows = []
     for row in grants_df.iterrows():
