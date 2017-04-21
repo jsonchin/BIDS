@@ -6,7 +6,20 @@ from .utility import *
 from .matching import *
 from .matching_tfidf import *
 
+import logging
+from logging import FileHandler
+file_handler = FileHandler('log.txt')
+file_handler.setLevel(logging.WARNING)
+
+# from logging import Formatter
+# file_handler.setFormatter(Formatter(
+#     '%(asctime)s %(levelname)s: %(message)s '
+#     '[in %(pathname)s:%(lineno)d]'
+# ))
+
 app = Flask(__name__) # create the application instance :)
+app.logger.addHandler(file_handler)
+
 
 
 #####################################################
@@ -27,6 +40,16 @@ TABS = [
         ('Grant Search', 'grant_search'),
         ('Faculty Search', 'faculty_search')
     ]
+
+##############
+## Database ##
+##############
+
+@app.teardown_appcontext
+def close_db(error):
+    """Closes the database again at the end of the request."""
+    if hasattr(g, 'mysqldb'):
+        g.mysqldb.close()
 
 ###########
 ## Views ##

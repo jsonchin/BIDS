@@ -100,8 +100,8 @@ def get_faculty_profile_img(faculty_name):
     return img_path
 
 def get_top_k_faculty_html(corpus, k=5, is_faculty_matching=True):
-    faculty_matches = get_k_closest_faculty(corpus, k=k)
-    # faculty_matches = get_top_k_faculty_tfidf(corpus, k=k) #jerry's tfidf
+    # faculty_matches = get_k_closest_faculty(corpus, k=k)
+    faculty_matches = get_top_k_faculty_tfidf(corpus, k=k) #jerry's tfidf
 
     for faculty_d in faculty_matches:
         faculty_d['faculty_img_url'] = get_faculty_profile_img(faculty_d['faculty_name'])

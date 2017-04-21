@@ -1,16 +1,28 @@
 import MySQLdb
-
-# from flaskr.flaskr.data_management.format_grant_data_sources import format_grants_gov_data
+from flask import g
 from .database_utilities import *
 from .database_info import *
 
 
-db =MySQLdb.connect(
-    host='127.0.0.1',
-    user='root',
-    passwd='pw',
-    db='brdo'
-)
+"""
+faculty_vcr
+    -vcresearch profile information
+
+faculty_webpages
+    -personal webpages bag of words
+
+grants
+    -grants from different sources
+        -grants.gov
+        -nsf
+
+grants_user_input
+    -user/manually inputted grants
+
+faculty_grants
+    -faculty_name-grant_name pairs
+"""
+
 
 # ALL functions in this file return a QueryResponse if they return anything
 # if not returning anything (updating/inserting/removing records), then should db.commit() to save changes
@@ -35,21 +47,42 @@ class QueryResponse():
 #     return [c[0] for c in cur.fetchall()]
 
 
+def connect_db():
+    db = MySQLdb.connect(
+        host='127.0.0.1',
+        user='root',
+        passwd='pw',
+        db='brdo'
+    )
+    return db
+
+def get_db():
+    try:
+        if not hasattr(g, 'mysqldb'):
+            g.mysqldb = connect_db()
+        return g.mysqldb
+    except:
+        return connect_db()
+
+
 # @app.route('/')
 #no need to route if you're just going to call it internally from a python fn
 def get_faculty_vcr(faculty_name):
+    db = get_db()
     cur = db.cursor()
     cur.execute('''SELECT * FROM faculty_vcr WHERE faculty_name=%s;''', (faculty_name,)) #SANITIZE PLEASE!
     rows = cur.fetchall()
     return QueryResponse(rows, [l[0] for l in cur.description])
 
 def get_faculty_grants():
+    db = get_db()
     cur = db.cursor()
     cur.execute('''SELECT * FROM faculty_grants;''')
     rows = cur.fetchall()
     return QueryResponse(rows, [l[0] for l in cur.description])
 
 def get_faculty_names():
+    db = get_db()
     cur = db.cursor()
     cur.execute('''SELECT faculty_name FROM faculty_vcr;''')
     rows = cur.fetchall()
@@ -58,6 +91,7 @@ def get_faculty_names():
     # return [t[0] for t in rows]
 
 def get_faculty_webpages():
+    db = get_db()
     cur = db.cursor()
     cur.execute('''
         SELECT * FROM faculty_webpages;''')
@@ -66,6 +100,7 @@ def get_faculty_webpages():
 
 
 def get_faculty_all():
+    db = get_db()
     cur = db.cursor()
     cur.execute('''
         SELECT * FROM faculty_vcr AS f1
@@ -75,6 +110,7 @@ def get_faculty_all():
     return QueryResponse(rows, [l[0] for l in cur.description])
 
 def get_faculty_all_specific(faculty_name):
+    db = get_db()
     cur = db.cursor()
     cur.execute('''
         SELECT * FROM faculty_vcr AS f1
@@ -86,6 +122,7 @@ def get_faculty_all_specific(faculty_name):
 
 
 def insert_grant(grant_d):
+    db = get_db()
     cur = db.cursor()
 
     sql = '''INSERT INTO grants_user_input VALUES ( ''' + ("%s, "*(len(grants_db_column_names) - 1)) + "%s )"
@@ -103,6 +140,7 @@ def remove_grant(grant_d):
     :param grant_d:
     :return:
     """
+    db = get_db()
     cur = db.cursor()
 
     sql = '''DELETE FROM grants WHERE grant_title=%s AND grants_gov_url=%s'''
@@ -116,6 +154,7 @@ def remove_grant(grant_d):
     db.commit()
 
 def get_all_grants():
+    db = get_db()
     cur = db.cursor()
     cur.execute('''SELECT * FROM grants;''')
     rows = cur.fetchall()
@@ -130,6 +169,7 @@ def get_all_grants():
 #     return QueryResponse(rows, [l[0] for l in cur.description])
 
 def get_offset_k_recent_grants(k=10, offset=0):
+    db = get_db()
     cur = db.cursor()
     cur.execute('''SELECT * FROM grants ORDER BY grant_db_insert_date LIMIT %s OFFSET %s;''', [k, offset])
     rows = cur.fetchall()
@@ -142,6 +182,7 @@ def remove_outdated_grants():
     Removes all grants from both grants and grants_user_input that have a deadline less than today
     :return:
     """
+    db = get_db()
     cur = db.cursor()
     today_date = get_current_date()
     sql = """DELETE FROM grants WHERE grant_closing_date < %s;"""
