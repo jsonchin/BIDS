@@ -3,6 +3,7 @@ import numpy as np
 import string
 
 from .data_management.database import *
+from collections import defaultdict
 from nltk.corpus import stopwords
 from .utility import *
 import pickle
@@ -29,13 +30,21 @@ def get_top_k_faculty_tfidf(corpus, k=5):
     new_grant = grants_vectorizer.transform(cleaned).T
 
     similarities = np.dot(faculty_grants_matrix, new_grant)
-    max_product = np.max(similarities)
-    closest_grants = np.argsort(similarities.toarray(), axis=0)[-5*k:].reshape(5*k, )[::-1]
+    #max_product = np.max(similarities)
+    similarities = similarities.toarray()
+    similarities = similarities.reshape(similarities.shape[0], )
+    #closest_grants = np.argsort(similarities.toarray(), axis=0)[-5*k:].reshape(5*k, )[::-1]
+    closest_grants = np.argsort(similarities)[::-1]
 
+    matches = []
     faculty_matches = []
     for index in closest_grants:
-        faculty_name = ' '.join(split_first_last_name(faculty_list[index])).lower()
-        dist = similarities[index].toarray()[0][0] / max_product
+        faculty = faculty_list[index]
+        faculty_name = ' '.join(split_first_last_name(faculty)).lower()
+        if faculty in matches:
+            #print("Duplicate faculty")
+            continue
+        dist = similarities[index] # / max_product
         qr = get_faculty_vcr(faculty_name)
         rows = qr.rows
         col_names = qr.column_names
@@ -43,6 +52,7 @@ def get_top_k_faculty_tfidf(corpus, k=5):
             d = {col: row for row, col in zip(rows[0], col_names)}
             d['dist'] = dist
             faculty_matches.append(d)
+            matches.append(faculty)
         if len(faculty_matches) == k:
             break
 
@@ -61,9 +71,12 @@ def get_grants_vectorizer():
 def create_faculty_grants_matrix(grants_vectorizer):
     faculty_grants = get_faculty_grants().rows
     corpus, faculty_list = [], []
+    faculty_grants_set = defaultdict(set)
     for title, faculty in faculty_grants:
-        corpus.append(title)
-        faculty_list.append(faculty)
+        if not title in faculty_grants_set[faculty]:
+            corpus.append(title)
+            faculty_list.append(faculty)
+            faculty_grants_set[faculty].add(title)
     faculty_grants_matrix = grants_vectorizer.transform(corpus)
     return faculty_grants_matrix, faculty_list
 
@@ -86,6 +99,6 @@ def split_first_last_name(s):
     else:
         return max_word2, max_word
 
-faculty_vectorizer = get_grants_vectorizer()
+faculty_vectorizer = get_faculty_vectorizer()
 grants_vectorizer = get_grants_vectorizer()
 faculty_grants_matrix, faculty_list = create_faculty_grants_matrix(grants_vectorizer)

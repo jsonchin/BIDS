@@ -18,6 +18,18 @@ from format_grant_data_sources import *
 import MySQLdb
 
 
+"""
+Requires the following in data_management/temp_data/
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+faculty_vcr.csv
+complete_cleaned_faculty_webpages.csv
+grants_gov.csv
+research_grant_history.csv
+bids_data.csv
+nsf.csv
+usda.csv
+"""
+
 db =MySQLdb.connect(
     host='127.0.0.1',
     user='root',
@@ -229,9 +241,9 @@ def init_grants(cur):
     grants_df = grants_gov_df
     grants_df = grants_df[~grants_df['grant_title'].isnull()]
     # put grants gov first so it drops nsf duplicates
-    grants_df = grants_df.append(nsf_df)\
-                            .append(usda_df)\
-                                .drop_duplicates(['grant_title', 'grant_info_url'])
+    grants_df = grants_df.append(nsf_df).drop_duplicates(['grant_title', 'grant_info_url'])
+                            #.append(usda_df)\
+                            #    .drop_duplicates(['grant_title', 'grant_info_url'])
 
     rows = []
     for row in grants_df.iterrows():
@@ -247,15 +259,51 @@ def init_grants(cur):
 def init_faculty_previous_grants(cur):
     """ Initialize faculty previous grants from research_grant_history """
     punc_trans = str.maketrans(string.punctuation, " " * len(string.punctuation))
-    faculty_grants = {}
+    num_trans = str.maketrans('', '', '1234567890')
+    sw = set(stopwords.words('english'))
+    wnl = wordnet.WordNetLemmatizer()
+    faculty_grants = []
+
     grant_history_df = pd.read_csv('temp_data/research_grant_history.csv', delimiter=",")
     for index, row in grant_history_df.iterrows():
-        name = row['PI Name'].lower().translate(punc_trans)
-        name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
-        faculty_grants[row['Title']] = name
+        uncleaned_name = row['PI Name']
+        name = uncleaned_name.lower().translate(punc_trans)
+        if "," in uncleaned_name:
+            name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
+        # Removes stopwords and lemmatizes words. Remove if want to keep whole description
+        title = row['Title']
+        try:
+            title = title.lower()
+            title = title.translate(punc_trans)
+            title = title.translate(num_trans)
+            title = filter(lambda x: x.lower() not in sw, title.split())
+            title = [wnl.lemmatize(x) for x in title]
+            title = ' '.join(title)
+            faculty_grants.append((title, name))
+        except:
+            continue
+
+    new_grant_history_df = pd.read_csv('temp_data/bids_data.csv')
+    for index, row in new_grant_history_df.iterrows():
+        uncleaned_name = row['Investigator']
+        name = uncleaned_name.lower().translate(punc_trans)
+        if "," in uncleaned_name:
+            name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
+        # Removes stopwords and lemmatizes words. Remove if want to keep whole description
+        title = row['Title']
+        try:
+            title = title.lower()
+            title = title.translate(punc_trans)
+            title = title.translate(num_trans)
+            title = filter(lambda x: x.lower() not in sw, title.split())
+            title = [wnl.lemmatize(x) for x in title]
+            title = ' '.join(title)
+            faculty_grants.append((title, name))
+        except:
+            continue
 
     faculty_grants_stmt = "INSERT INTO faculty_grants (title, faculty) VALUES (%s, %s)"
-    faculty_grants_rows = faculty_grants.items()
+    faculty_grants_rows = faculty_grants
 
     cur.executemany(faculty_grants_stmt, faculty_grants_rows)
 
@@ -282,7 +330,7 @@ def create_vectorizers():
             second = [wnl.lemmatize(x) for x in first]
             cleaned.append(second)
         except:
-            cleaned.append(["Nothing"])
+            continue
 
     faculty_corpus = [' '.join(doc) for doc in cleaned]
     faculty_vectorizer = TfidfVectorizer()
@@ -304,11 +352,62 @@ def create_vectorizers():
             second = [wnl.lemmatize(word) for word in first]
             cleaned.append(second)
         except:
-            cleaned.append(["Nothing"])
+            continue
 
-    grants_corpus = [' '.join(doc) for doc in cleaned]
+    grants_gov_corpus = [' '.join(doc) for doc in cleaned]
+
+    """ Preprocessing prev faculty grants data """
+    grant_history_df = pd.read_csv('temp_data/research_grant_history.csv', delimiter=",")
+    descriptions = grant_history_df['Title']
+    cleaned = []
+    for desc in descriptions:
+        try:
+            desc = desc.lower()
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda word: word not in sw, desc.split())
+            second = [wnl.lemmatize(word) for word in first]
+            cleaned.append(second)
+        except:
+            continue
+    grant_history_corpus = [' '.join(doc) for doc in cleaned]
+
+    """ Preprocessing new prev faculty grants data """
+    new_grant_history_df = pd.read_csv('temp_data/bids_data.csv', delimiter=",")
+    descriptions = new_grant_history_df['Title']
+    cleaned = []
+    for desc in descriptions:
+        try:
+            desc = desc.lower()
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda word: word not in sw, desc.split())
+            second = [wnl.lemmatize(word) for word in first]
+            cleaned.append(second)
+        except:
+            continue
+    new_grant_history_corpus = [' '.join(doc) for doc in cleaned]
+
+    """ Preprocessing nsf grants data """
+    nsf_df = pd.read_csv('temp_data/nsf.csv', delimiter="~")
+    descriptions = nsf_df['Description']
+    cleaned = []
+    for desc in descriptions:
+        try:
+            desc = desc.lower()
+            desc = desc.translate(punc_trans)
+            desc = desc.translate(num_trans)
+            first = filter(lambda word: word not in sw, desc.split())
+            second = [wnl.lemmatize(word) for word in first]
+            cleaned.append(second)
+        except:
+            continue
+    nsf_corpus = [' '.join(doc) for doc in cleaned]
+    
+    # grants_corpus = grants_gov_corpus
+    grants_corpus = grants_gov_corpus + grant_history_corpus + new_grant_history_corpus + nsf_corpus
     grants_vectorizer = TfidfVectorizer(max_df=30000)
-    grants_matrix = grants_vectorizer.fit_transform(grants_corpus)
+    grants_vectorizer.fit(grants_corpus)
 
     with open('temp_data/grants_vectorizer.pkl', 'wb') as output:
         pickle.dump(grants_vectorizer, output, -1)
