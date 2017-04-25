@@ -36,7 +36,7 @@ def get_top_k_faculty_tfidf(corpus, k=5):
     #closest_grants = np.argsort(similarities.toarray(), axis=0)[-5*k:].reshape(5*k, )[::-1]
     closest_grants = np.argsort(similarities)[::-1]
 
-    matches = []
+    matches = set()
     faculty_matches = []
     for index in closest_grants:
         faculty = faculty_list[index]
@@ -52,7 +52,7 @@ def get_top_k_faculty_tfidf(corpus, k=5):
             d = {col: row for row, col in zip(rows[0], col_names)}
             d['dist'] = dist
             faculty_matches.append(d)
-            matches.append(faculty)
+            matches.add(faculty)
         if len(faculty_matches) == k:
             break
 
