@@ -241,9 +241,9 @@ def init_grants(cur):
     grants_df = grants_gov_df
     grants_df = grants_df[~grants_df['grant_title'].isnull()]
     # put grants gov first so it drops nsf duplicates
-    grants_df = grants_df.append(nsf_df).drop_duplicates(['grant_title', 'grant_info_url'])
-                            #.append(usda_df)\
-                            #    .drop_duplicates(['grant_title', 'grant_info_url'])
+    grants_df = grants_df.append(nsf_df)\
+                            .append(usda_df)\
+                                .drop_duplicates(['grant_title', 'grant_info_url'])
 
     rows = []
     for row in grants_df.iterrows():
