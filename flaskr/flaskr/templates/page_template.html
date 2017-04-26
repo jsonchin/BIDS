@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
-<script src="//code.jquery.com/jquery-1.10.2.js"></script>
-<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -20,6 +20,9 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
 
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
 <script type=text/javascript>
   $SCRIPT_ROOT = {{ request.script_root|tojson|safe }};
 </script>
@@ -27,72 +30,16 @@
 
 <link rel=stylesheet type=text/css href="{{ url_for('static', filename='css/page.css') }}">
 
+<script type="text/javascript" src="{{ url_for('static', filename='js/page.js') }}"></script>
+
+
+{% for css_file in css_files %}
 <link rel=stylesheet type=text/css href="{{ css_file }}">
+{% endfor %}
 
+{% for js_file in js_files %}
 <script type="text/javascript" src="{{ js_file }}"></script>
-
-
-
-<style>
-
-#main-container {
-    background-color:#FAFAFA;
-    padding:0;
-    margin:0;
-}
-
-#main-row {
-    height:100vh;
-}
-
-#nav-sidebar {
-    height:100vh;
-    width:250px;
-    background-color:#222222;
-    top:0;
-    left:0;
-    position:fixed;
-}
-
-#nav-sidebar-ul {
-    width:100%;
-    display:block;
-    list-style-type: none;
-    padding:0;
-}
-
-.sidebar-li {
-    height:50px;
-    width:100%;
-    color:white;
-    text-align:left;
-    left:0;
-    text-decoration: none;
-    background: none;
-    padding:20px;
-    display:flex;
-    align-items: center;
-}
-
-.sidebar-li:hover {
-    background:#777777;
-}
-
-.sidebar-a {
-    text-align:left;
-    left:0;
-    text-decoration: none;
-    background-color: none;
-    color:#ffffff;
-    pointer-event:none;
-}
-
-
-.main-content {
-    margin-left:300px;
-    position:relative;
-}
-</style>
+{% endfor %}
 
 
 <head>
@@ -106,7 +53,7 @@
         <div id="nav-sidebar">
             <ul id="nav-sidebar-ul" class="sidebar-nav">
             {% for tab in tabs_d %}
-                <li class="sidebar-li"><a class="sidebar-a" href="{{tab.route}}">{{ tab.name }}</a></li>
+                <li class="sidebar-li"><a class="sidebar-a" href="{{tab.route}}"><i class="material-icons list-bullet">chevron_right</i> {{ tab.name }}</a></li>
             {% endfor %}
             </ul>
         </div>

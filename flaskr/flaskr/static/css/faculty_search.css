@@ -1,0 +1,20 @@
+.faculty-card-container {
+    width:70vw;
+    height:auto;
+    box-shadow: 5px 5px 5px #888888;
+    margin:auto;
+    margin-top:2vh;
+    margin-bottom:2vh;
+    padding-top:2vh;
+    padding-bottom:2vh;
+    padding-left:2vw;
+    padding-right:2vw;
+    background-color:#FFFFFF;
+    overflow:auto;
+}
+#faculty-selector {
+    display:inline-block;
+    width:300px;
+}
+#response-container {
+}

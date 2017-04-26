@@ -73,6 +73,8 @@ while True:
                 for header in bad_headers:
                     if header in synopsis:
                         synopsis = temp.next_sibling.next_sibling.next_sibling.strip()
+                if len(synopsis) == 0:
+                    raise ValueError("Synopsis error")
                 synopses.append(synopsis)
                 
                 links.append(full_link)
@@ -89,7 +91,8 @@ while True:
                     print("Error code: 2")
                     print(nsf_base + alink.get("href"))
                     headlines.pop()
-                    due_dates.pop()
+                    due_dates_start.pop()
+                    due_dates_end.pop()
     else:
         break
     curr_page += 1

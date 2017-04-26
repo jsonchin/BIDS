@@ -1,0 +1,25 @@
+.faculty-matches-container {
+    display:block;
+}
+.faculty-card {
+    display:block;
+    width:100%;
+    margin-bottom:3vh;
+    height:auto;
+    overflow:auto;
+}
+.faculty-card-left {
+    //float:left;
+    //width:70%;
+}
+.faculty-card-right {
+    float:right;
+    margin-left:2vw;
+    margin-right:2vw;
+    margin-top:3vh;
+    margin-bottom:1vh;
+}
+.faculty-card-img {
+    max-width:200px;
+    height:auto;
+}

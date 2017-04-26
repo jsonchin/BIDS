@@ -1,0 +1,26 @@
+{% for faculty in faculty_l %}
+{% if is_faculty_matching %}
+<!--<hr>-->
+{% endif %}
+<div class="faculty-card">
+    <div class="faculty-card-right">
+        <img src="{{faculty.faculty_img_url}}" class="faculty-card-img">
+    </div>
+    <div class="faculty-card-left">
+        {% if is_faculty_matching %}
+        <h3>{{loop.index}}) <a href="{{faculty.faculty_site_url}}" target="_blank">{{faculty.faculty_name}}</a> ({{faculty.dist}})</h3>
+        {% else %}
+        <h3><a href="{{faculty.faculty_site_url}}" target="_blank">{{faculty.faculty_name}}</a></h3>
+        {% endif %}
+        <h4>{{faculty.department}}</h4>
+        {% if (faculty.description == None) %}
+        No data on VCResearch. (Refer to their personal webpage)
+        {% else %}
+        <span class="read-more" data-show-n-char="600">
+            {{faculty.description}}
+        </span>
+        {% endif %}
+    </div>
+
+</div>
+{% endfor %}
