@@ -19,7 +19,12 @@ def get_faculty_query_html():
     :return: html
     """
     faculty_name = request.form['faculty_name'].lower()
-    qr = get_faculty_vcr(faculty_name)
+    num_matches = request.form['num_matches']
+    try:
+        k = int(num_matches)
+    except:
+        k = 10
+    qr = get_faculty_all_specific(faculty_name)
     column_names = qr.column_names
     row = qr.rows[0]
 
@@ -33,7 +38,8 @@ def get_faculty_query_html():
     faculty_d['faculty_img_url'] = get_faculty_profile_img(faculty_d['faculty_name'])
     faculty_d['faculty_name'] = captialize_name(faculty_d['faculty_name'])
 
-    grant_matches_html = get_top_k_grants_html(faculty_d['description'],
+
+    grant_matches_html = get_top_k_grants_html(faculty_d['faculty_webpage_content'], k=k,
                                                show_faculty_matches=False)
 
     faculty_card_html = render_template('response/k_faculty.html',
@@ -62,7 +68,11 @@ def get_top_k_grants_for_faculty_html():
     :return: html
     """
     corpus = request.form['corpus']
-    return get_top_k_grants_html(corpus, show_faculty_matches=False)
+    try:
+        num_matches = request.form['num_matches']
+    except:
+        num_matches = 5
+    return get_top_k_grants_html(corpus, k=num_matches, show_faculty_matches=False)
 
 @app.route('/get_k_more_grants', methods=['POST'])
 def get_k_more_grants_html():
@@ -100,8 +110,8 @@ def get_faculty_profile_img(faculty_name):
     return img_path
 
 def get_top_k_faculty_html(corpus, k=5, is_faculty_matching=True):
-    # faculty_matches = get_k_closest_faculty(corpus, k=k)
-    faculty_matches = get_top_k_faculty_tfidf(corpus, k=k) #jerry's tfidf
+    faculty_matches = get_k_closest_faculty(corpus, k=k)
+    # faculty_matches = get_top_k_faculty_tfidf(corpus, k=k) #jerry's tfidf
 
     for faculty_d in faculty_matches:
         faculty_d['faculty_img_url'] = get_faculty_profile_img(faculty_d['faculty_name'])

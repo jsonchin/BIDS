@@ -12,7 +12,14 @@
         {% else %}
         <h3><a href="{{faculty.faculty_site_url}}" target="_blank">{{faculty.faculty_name}}</a></h3>
         {% endif %}
+
+        {% if (faculty.department == None) %}
+        <h4>Department not listed on VCResearch</h4>
+        {% else %}
         <h4>{{faculty.department}}</h4>
+        {% endif %}
+
+
         {% if (faculty.description == None) %}
         No data on VCResearch. (Refer to their personal webpage)
         {% else %}

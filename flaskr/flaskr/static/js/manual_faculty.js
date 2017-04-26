@@ -5,6 +5,7 @@
 function grantSubmit() {
     d = {}
     d['corpus'] = $("#inputDescription").val();
+    d['num_matches'] = $("#num-matches").val();
 
     $.ajax({
         url:$SCRIPT_ROOT + "/faculty_get_top_k_grants",
