@@ -1,7 +1,9 @@
 import MySQLdb
 from flask import g
-from .database_utilities import *
-from .database_info import *
+# from .database_utilities import *
+# from .database_info import *
+import datetime
+import pytz
 
 
 """
@@ -32,20 +34,6 @@ class QueryResponse():
      def __init__(self, rows, column_names):
          self.rows = rows
          self.column_names =  column_names
-
-
-
-# Use cur.description to get column names
-# def get_table_columns(table_name):
-#     cur = db.cursor()
-#
-#     cur.execute("""
-#         SELECT COLUMN_NAME FROM (
-#          SELECT * FROM INFORMATION_SCHEMA.COLUMNS
-#             WHERE table_name='faculty_vcr'
-#          ) T;""")  # SANITIZE PLEASE!
-#     return [c[0] for c in cur.fetchall()]
-
 
 def connect_db():
     db = MySQLdb.connect(
@@ -192,3 +180,22 @@ def remove_outdated_grants():
     cur.close()
     # return QueryResponse(rows, [l[0] for l in cur.description])
     db.commit()
+
+
+grants_db_column_names = [
+'grant_title',
+'grant_description',
+'grant_posted_date',
+'grant_closing_date',
+'grant_info_url',
+'grant_sponsor',
+'grant_award_floor',
+'grant_award_ceiling',
+'grant_db_insert_date'
+]
+
+def get_current_time():
+    return str(datetime.datetime.now(pytz.timezone('US/Pacific')))[:19]
+
+def get_current_date():
+    return str(datetime.datetime.now(pytz.timezone('US/Pacific')))[:10]

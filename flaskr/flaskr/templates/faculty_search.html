@@ -1,14 +1,17 @@
 <h2>Faculty Search</h2>
 
-<div>
+<label for="faculty-selector" style="display:block;">Faculty Name:</label>
 <input id="faculty-selector" class="form-control">
 
-    <div id="response-container">
+<label for="num-matches" style="display:block; margin-top:10px;">Number of grants to find:</label>
+<input type="number" min="1" id="num-matches" class="form-control" style="width:100px;">
 
-    </div>
+<div id="response-container">
+
 </div>
-  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
-  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+<script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 <script>
 var faculty_names = {% autoescape off %}
 
@@ -34,7 +37,7 @@ $("#faculty-selector").autocomplete({
     delay:0,
     select:function(event, ui) {
         $("#faculty-selector").val(ui.item.label);
-        setFacultyInfoTable(ui.item.value);
+        setFacultyInfoTable(ui.item.value, $("#num-matches").val());
         return false;
     }
 });

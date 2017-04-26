@@ -167,7 +167,36 @@ def initialize_faculty():
             return s
 
     df_faculty['glove_vec'] = df_faculty['faculty_webpage_content'].apply(split_sentence).apply(bag_to_vec)
+
+    df_faculty['faculty_webpage_content'][~df_faculty['faculty_webpage_content'].notnull()] = ''
+
     return df_faculty
+
+def initialize_tfidf_vectorizer():
+    tfidf_vectorizer = TfidfVectorizer()
+    tfidf_vectorizer.fit(df_faculty['faculty_webpage_content'])
+    return tfidf_vectorizer
+
+def sentences_to_vec(sentences):
+    vecs = []
+    vocab_index_map = tfidf_vectorizer.vocabulary_
+    tfidf = tfidf_vectorizer.transform(sentences).todense()
+    for i in range(len(sentences)):
+        sentence = sentences[i]
+        words = sentence.split(' ')
+        vec = 0
+        count = 0
+        for word in set(words):
+            try:
+                vec += glove_d[word] * tfidf[i, vocab_index_map[word]]
+                count += 1
+            except Exception as e:
+                pass
+        if type(vec) == int:
+            vecs.append(np.zeros(100)) #np.nan
+        else:
+            vecs.append(vec)
+    return vecs
 
 def initialize_grants():
     qr = get_all_grants()
@@ -178,6 +207,15 @@ def initialize_grants():
 
     df_grants['glove_vec'] = df_grants['grant_description'].apply(text_to_bag).apply(bag_to_vec)
     return df_grants
+
+def initialize_faculty_vecs():
+    df_faculty['glove_vec'] = sentences_to_vec(df_faculty['faculty_webpage_content'].values)
+
+def initialize_grant_vecs():
+    df_grants['glove_vec'] = sentences_to_vec(
+            df_grants['grant_description'].apply(text_to_bag).apply(lambda s:' '.join(s)))
+
+
 
 
 
@@ -261,4 +299,7 @@ def get_k_closest_grants(corpus, k=5):
 
 glove_d = initialize_glove()
 df_faculty = initialize_faculty()
+# tfidf_vectorizer = initialize_tfidf_vectorizer()
 df_grants = initialize_grants()
+# initialize_faculty_vecs()
+# initialize_grant_vecs()

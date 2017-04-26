@@ -38,7 +38,7 @@ db =MySQLdb.connect(
 )
 
 
-def init_db(inserting_grants=True):
+def init_db(inserting_grants=False):
     cur = db.cursor()
 
     db.set_character_set('utf8')
@@ -46,16 +46,18 @@ def init_db(inserting_grants=True):
     cur.execute('SET CHARACTER SET utf8;')
     cur.execute('SET character_set_connection=utf8;')
 
-    if inserting_grants:
+    if not inserting_grants:
         init_drop_and_create_tables(cur)
 
         init_faculty_vcr(cur)
+
+        init_faculty_webpages_names(cur)
 
         init_faculty_webpages(cur)
 
     init_grants(cur)
 
-    if inserting_grants:
+    if not inserting_grants:
         init_faculty_previous_grants(cur)
 
         create_vectorizers()
@@ -180,9 +182,33 @@ def init_faculty_vcr(cur):
 
     cur.executemany(sql, rows)
 
+
+def init_faculty_webpages_names(cur):
+    """
+    Reads 'faculty_webpages_names_urls.csv' from temp_data and inserts names and webpage urls into faculty_vcr
+    :param cur:
+    :return:
+    """
+    df = pd.read_csv('temp_data/faculty_webpages_names_urls.csv', sep=',')
+
+    df = df.where(pd.notnull(df), None)
+    df['faculty'] = df['faculty'].apply(lambda s: s.lower().replace('’', "'"))
+
+    df = df.drop_duplicates('faculty')
+
+    rows = []
+
+    for row in df.iterrows():
+        rows.append(row[1].values.tolist())
+
+    # don't have duplicates
+    sql = """INSERT IGNORE INTO faculty_vcr (faculty_name, faculty_site_url) VALUES (%s, %s )"""
+
+    cur.executemany(sql, rows)
+
 def init_faculty_webpages(cur):
     """
-    Reads 'complete_cleaned_faculty_weboages.csv' from temp_data and inserts it into table faculty_webpages
+    Reads 'complete_cleaned_faculty_webpages.csv' from temp_data and inserts it into table faculty_webpages
     :param cur:
     :return:
     """
@@ -190,16 +216,15 @@ def init_faculty_webpages(cur):
 
     df = df.where(pd.notnull(df), None)
 
+    df['full_name'] = df['full_name'].apply(lambda s: s.lower().replace('’', "'"))
     df = df.drop_duplicates('full_name')
-
-    df['full_name'] = df['full_name'].apply(lambda s: s.lower())
 
     rows = []
 
     for row in df.iterrows():
         rows.append(row[1].values.tolist())
 
-    sql = """INSERT INTO faculty_webpages VALUES (""" + (" %s," * (len(df.columns.values) - 1)) + """ %s )"""
+    sql = """INSERT IGNORE INTO faculty_webpages VALUES (""" + (" %s," * (len(df.columns.values) - 1)) + """ %s )"""
 
     cur.executemany(sql, rows)
 
@@ -245,6 +270,16 @@ def init_grants(cur):
                             .append(usda_df)\
                                 .drop_duplicates(['grant_title', 'grant_info_url'])
 
+    def filter_no_desc(desc):
+        try:
+            if len(desc) <= 4:
+                return False
+        except:
+            return False
+        return True
+
+    grants_df = grants_df[grants_df['grant_description'].apply(filter_no_desc)]
+
     rows = []
     for row in grants_df.iterrows():
         rows.append(row[1].values.tolist())
@@ -287,8 +322,11 @@ def init_faculty_previous_grants(cur):
     for index, row in new_grant_history_df.iterrows():
         uncleaned_name = row['Investigator']
         name = uncleaned_name.lower().translate(punc_trans)
+        # name = row['PI Name'].lower().translate(punc_trans)
         if "," in uncleaned_name:
             name = ' '.join(list(filter(lambda x: len(x) > 1, name.split(" ")))[::-1])
+        name = ' '.join(name.split(' ')[::-1])
+        name = ' '.join(split_first_last_name(name))
         # Removes stopwords and lemmatizes words. Remove if want to keep whole description
         title = row['Title']
         try:
@@ -436,4 +474,6 @@ def split_first_last_name(s):
     else:
         return max_word2, max_word
 
-init_db()
+
+if __name__ == '__main__':
+    init_db()

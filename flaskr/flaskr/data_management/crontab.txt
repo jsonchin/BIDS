@@ -1,1 +1,1 @@
-1 0 * * * ../../venv/bin/python daily_job.py
+1 23 * * * ../../venv/bin/python daily_job.py

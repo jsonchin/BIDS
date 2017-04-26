@@ -1,6 +1,6 @@
-from .database import remove_outdated_grants
-from .scrape_data import scrape_all
-from .init_db import init_db
+from database import remove_outdated_grants
+from scrape_data import scrape_all
+from init_db import init_db
 
 # maybe should have these tasks within here instead of separate files
 def run_daily_tasks():
