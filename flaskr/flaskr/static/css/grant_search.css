@@ -4,6 +4,15 @@
     margin-bottom:5vh;
 }
 
+#grant-selector {
+    display:inline-block;
+    width:300px;
+}
+
 .faculty-card {
     border-top: 1px dashed #8c8b8b;
+}
+
+#response-container {
+
 }

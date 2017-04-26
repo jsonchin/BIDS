@@ -26,7 +26,7 @@ def text_to_bag(text):
         repl = ''
         text = re.sub(pattern, repl, text)
 
-        pattern = '[=/\.~_\"“…*]'
+        pattern = '[=/\.~_\"*]'
         repl = ' '
         text = re.sub(pattern, repl, text)
 
@@ -147,7 +147,7 @@ def bag_to_vec(sentence):
 
 def initialize_glove():
     glove_d = {}
-    with open('data_management/temp_data/glove.json', 'r') as f:
+    with open('data_management/temp_data/glove.json', 'wr') as f:
         json_d = json.load(f)
         for word in json_d:
             glove_d[word] = np.array(json_d[word])

@@ -43,6 +43,26 @@ def get_faculty_query_html():
                            grant_matches_html=grant_matches_html,
                            faculty_card_html=faculty_card_html)
 
+@app.route('/grant_search_query', methods=['POST'])
+def get_grant_query_html():
+    grant_name = request.form['grant_title'].lower()
+    qr = get_grant(grant_name)
+    column_names = qr.column_names
+    row = qr.rows[0] 
+
+    grant_d = {}
+    for i in range(len(column_names)):
+        if i >= len(row):
+            grant_d[column_names[i]] = ''
+        else:
+            grant_d[column_names[i]] = row[i]
+    
+    grant_d['grant_title'] = captialize_name(grant_d['grant_title'])
+
+    grant_card_html = render_template('response/k_grants.html', grants = grant_d, show_faculty_matches=False)
+    
+    return render_template('reponse/grant_query_response.html', 
+                            grant_card_html=grant_card_html)
 
 @app.route('/grant_get_top_k_faculty', methods=['POST'])
 def get_top_k_faculty_for_grant_html():

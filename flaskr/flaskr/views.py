@@ -39,9 +39,11 @@ def show_manual_faculty():
 
 @app.route('/grant_search')
 def show_grant_search():
+    grants = get_all_grants()
+    grant_names = [captialize_name(row[0]) for row in grants.rows]
     k_grants_html = get_k_more_grants_html()
 
-    grant_search_html = render_template('grant_search.html', k_grants_html=k_grants_html)
+    grant_search_html = render_template('grant_search.html', k_grants_html=k_grants_html, grant_name = grant_names)
 
     return render_page_with_html(grant_search_html,
                                  ['grant_search.css', 'faculty_card.css', 'grant_card.css'],

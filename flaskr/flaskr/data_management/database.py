@@ -120,6 +120,13 @@ def get_faculty_all_specific(faculty_name):
     rows = cur.fetchall()
     return QueryResponse(rows, [l[0] for l in cur.description])
 
+def get_grant(grant_name):
+    db = get_db()
+    cur = db.cursor()
+    cur.execute('''SELECT * FROM grants WHERE grant_title=%s;''', (grant_name,))
+    rows = cur.fetchall()
+    return QueryResponse(rows, [l[0] for l in cur.grant_description])
+    
 
 def insert_grant(grant_d):
     db = get_db()

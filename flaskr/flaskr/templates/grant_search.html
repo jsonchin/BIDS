@@ -1,4 +1,46 @@
 <h2>Grant Search</h2>
+<div>
+<input id="faculty-selector" class="form-control">
+
+    <div id="response-container">
+
+    </div>
+</div>
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script>
+var grant_names = {% autoescape off %}
+
+{{grant_names}}
+
+{% endautoescape %};
+
+
+
+$(document).ready(function(){
+
+var source = [];
+
+for (var i in grant_names) {
+    grant_name = grant_names[i];
+    source.push({'label':grant_name, 'value':grant_name});
+}
+
+$("#grant-selector").autocomplete({
+    source:source,
+    autoFocus: true,
+    minLength:3,
+    delay:0,
+    select:function(event, ui) {
+        $("#grant-selector").val(ui.item.label);
+        setGrantInfoTable(ui.item.value);
+        return false;
+    }
+});
+
+});
+
+</script>
 
 <div id="grant-card-container">
 {{ k_grants_html|safe }}

@@ -60,3 +60,18 @@ $(document).ready(function() {
         });
     });
 });
+
+function setGrantInfoTable(grant_name) {
+   return $.ajax({
+        type:'POST',
+        url:$SCRIPT_ROOT + "/grant_search_query",
+        data:{'grant_name':grant_name},
+        success:function(data) {
+          $("#response-container").html(data);
+          $('.read-more').each(initializeReadMore);
+        },
+        fail: function(response) {
+          alert("failed");
+        }
+    });
+}
