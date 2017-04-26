@@ -75,9 +75,23 @@ def call-scraper():
             	award_ranges.append(award_range)
             
             	error_code = 1           
-            	all_possible_description = grant_soup.find_all("p")
-            	description = all_possible_description[-1].string
-            	descriptions.append(description)
+                all_possible_description = grant_soup.find_all("p")
+                raw_description = all_possible_description[-1]
+                description = all_possible_description[-1].text
+                if raw_description.text == "":
+                    description = grant_soup.find("html")\
+                    .find("body").find("main").find("div", class_="layout-page clearfix")\
+                    .find("div", class_="layout-constrain").find("div", class_="layout-listing__row clearfix")\
+                    .find("div", class_="layout-page__main clearfix").find("article").text
+                    updated_description = ""
+                    for i in description:
+                        if i != '.':
+                            updated_description += str(i)
+                        else:
+                            updated_description += str(i)
+                            break
+                    description = updated_description
+                descriptions.append(description)
             
         	except:
             	if error_code == 0:
