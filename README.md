@@ -1,3 +1,56 @@
+## Berkeley Institute for Data Science: Data Science for Social Good Spring 2017 Project
+
+Our team has developed a webapp for the Berkeley Research Development Office to use to automatically and effectively match research grants with Berkeley researchers and faculty.
+
+### Data
+
+Each research grant is a description of the grant which varies in length and specificity across grants.
+
+Here's the type of research grant data we're dealing with:
+
+The first two sentences of the description of [Innovations in Biological Imaging and Visualization](https://nsf.gov/funding/pgm_summ.jsp?pims_id=503473&org=NSF&sel_org=NSF&from=fund)
+> The IBIV activity supports the development of novel approaches to the analysis of biological research images through the innovative "Ideas Lab" project development and review process. The analysis and visual representation of complex biological images present daunting challenges across all scales of investigation, from multispectral analysis of foliage or algal bloom patterns in satellite images, to automated specimen classification, and tomographic reconstructions in structural biology. 
+
+Each faculty member has a bag of words we've scraped from VCResearch or from their personal webpages. Sometimes faculty members don't put a lot for their description or don't update their webpages.
+
+Here's [John Denero](https://www2.eecs.berkeley.edu/Faculty/Homepages/denero.html)'s bag of words from his personal webpage
+```python
+['teaching', 'artificial', 'intelligence', 'education', 'educ', 'centers', 'artificial', 'intelligence', 'bair', 'teaching', 'schedule', 'foundations', 'data', 'science', 'mowefr', 'pimentel', 'completion', 'computer', 'science', 'decal', 'anova', 'teaching', 'computer', 'science', 'youth', 'soda', 'foundations', 'data', 'science', 'mowefr', 'completion', 'computer', 'science', 'eecs', 'natural', 'language', 'processing', 'tasks', 'related', 'statistical', 'machine', 'translation', 'cross-lingual', 'alignment', 'translation', 'model', 'estimation', 'translation', 'inference', 'lexicon', 'acquisition', 'unsupervised', 'grammar', 'induction', 'prior', 'spent', 'four', 'scientist', 'google', 'primarily', 'google', 'translate', 'serves', 'billion', 'translation', 'requests', 'refereed', 'naacl', 'acl', 'emnlp', 'conferences', 'author', 'composing', 'textbook', 'programming', 'computer', 'science', 'masters', 'philosophy', 'eecs']
+```
+
+Each faculty member also has a list of research grant titles that they were awarded (if any).
+
+
+### Methodology
+
+We used two methods to match research grants to faculty and faculty to research grants.
+
+The first is using TFIDF (Term Frequency Inverse Doc Frequency) and past research grant awards.
+
+
+The second is using [GloVe (Global Vectors for Word Representations)](https://nlp.stanford.edu/projects/glove/) without using past research grant awards. To match a faculty member to his or her k best research grants, we take their bag of words, convert each word to its GloVe representation (100 dimensional), then average the vectors. We do the same for each grant for their grant descriptions after cleaning and filtering them (removing stop words, punctuation, etc). Then we run K-nearest neighbors to find the k best research grants for the faculty member. This also works the same way for matching a research grant to the k-best faculty members.
+
+Using this, John Denero's first research grant match is with [Computational and Data-Enabled Science and Engineering in Mathematical and Statistical Sciences](https://www.grants.gov/web/grants/view-opportunity.html?oppId=289329). As an EECS professor that doesn't do research and that has been heavily involved in developing and growing the Data Science program here at Berkeley (teaching DATA8), this is not an unreasonable grant matching. However, some more educational based research grants seem to be more appropriate from our perspective since he seems really really enthusiastic about CS education and helping his students suceed.
+
+
+### Data Sources
+
+We've used the ``requests`` python library and ``beautifulsoup`` to help gather the data.
+
+For grants:
+- [grants.gov](grants.gov)
+- [nsf](nsf.gov)
+- [usda](usda.gov)
+
+For faculty members:
+- [Berkeley VCResearch](vcresearch.berkeley.edu)
+- Berkeley department personal faculty webpages
+- Google Scholars
+- Past research grant awards to faculty members
+
+
+## Installation
+
 The following requirements are needed (Python3):
 
 ```python
