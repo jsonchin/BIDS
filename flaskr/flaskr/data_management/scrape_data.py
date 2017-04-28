@@ -188,6 +188,7 @@ def scrape_usda():
     page_limit = 25
 
     while page_limit:
+
         search_raw = urllib.request.urlopen(search + str(current))
         search_soup = BeautifulSoup(search_raw, "html5lib")
         page = search_soup.find_all(lambda tag: tag.name == 'td')
@@ -201,7 +202,7 @@ def scrape_usda():
                 links.append(full_link)
 
                 grant_url = urllib.request.urlopen(full_link)
-                grant_soup = BeautifulSoup(grant_url, "html5lib")
+                grant_soup = BeautifulSoup(grant_url, "lxml")
                 headline = grant_soup.find("h1", class_="node__title").text.partition("\n")[0]
 
                 headlines.append(headline)
@@ -233,7 +234,21 @@ def scrape_usda():
 
                 error_code = 1
                 all_possible_description = grant_soup.find_all("p")
-                description = all_possible_description[-1].string
+                raw_description = all_possible_description[-1]
+                description = all_possible_description[-1].text
+                if raw_description.text == "":
+                    description = grant_soup.find("html") \
+                        .find("body").find("main").find("div", class_="layout-page clearfix") \
+                        .find("div", class_="layout-constrain").find("div", class_="layout-listing__row clearfix") \
+                        .find("div", class_="layout-page__main clearfix").find("article").text
+                    updated_description = ""
+                    for i in description:
+                        if i != '.':
+                            updated_description += str(i)
+                        else:
+                            updated_description += str(i)
+                            break
+                    description = updated_description
                 descriptions.append(description)
 
             except:
