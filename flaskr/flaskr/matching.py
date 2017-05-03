@@ -240,6 +240,7 @@ def get_k_closest_faculty(corpus, k=5):
 
     corpus_vec = bag_to_vec(corpus_bag)
 
+
     knn = NearestNeighbors(n_neighbors=k, n_jobs=-1)
     knn.fit(df_faculty['glove_vec'][~df_faculty['glove_vec'].isnull()].values.tolist())
 
@@ -258,6 +259,7 @@ def get_k_closest_faculty(corpus, k=5):
         d['dist'] = dist
         faculty_matches_info.append(d)
 
+
     return faculty_matches_info
 
 def get_k_closest_grants(corpus, k=5):
@@ -274,9 +276,9 @@ def get_k_closest_grants(corpus, k=5):
     """
     corpus_bag = text_to_bag(corpus)
 
-    corpus_vec = bag_to_vec(corpus_bag)
-
     print(corpus_bag)
+
+    corpus_vec = bag_to_vec(corpus_bag)
 
     knn = NearestNeighbors(n_neighbors=k, n_jobs=-1)
     knn.fit(df_grants['glove_vec'][~df_grants['glove_vec'].isnull()].values.tolist())

@@ -1,5 +1,5 @@
 #! /bin/bash
-cd ../../
+cd ~/public_html/brdo
 . venv/bin/activate
 cd flaskr/data_management
 

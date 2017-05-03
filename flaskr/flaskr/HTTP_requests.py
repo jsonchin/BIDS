@@ -18,7 +18,7 @@ def get_faculty_query_html():
     Given a faculty_name in a POST request, returns html that contains their faculty card and top k grant matches
     :return: html
     """
-    faculty_name = request.form['faculty_name'].lower()
+    faculty_name = request.form['faculty_name'].strip().lower()
     num_matches = request.form['num_matches']
     try:
         k = int(num_matches)
@@ -69,9 +69,10 @@ def get_top_k_grants_for_faculty_html():
     """
     corpus = request.form['corpus']
     try:
-        num_matches = request.form['num_matches']
+        num_matches = int(request.form['num_matches'])
     except:
         num_matches = 5
+
     return get_top_k_grants_html(corpus, k=num_matches, show_faculty_matches=False)
 
 @app.route('/get_k_more_grants', methods=['POST'])
@@ -120,7 +121,7 @@ def get_top_k_faculty_html(corpus, k=5, is_faculty_matching=True):
     return render_template('response/k_faculty.html', faculty_l=faculty_matches, is_faculty_matching=is_faculty_matching)
 
 def get_top_k_grants_html(corpus, k=10, show_faculty_matches=True):
-    grant_matches = get_k_closest_grants(corpus, k)
+    grant_matches = get_k_closest_grants(corpus, k=k)
     return render_template('response/k_grants.html', grants=grant_matches, show_faculty_matches=show_faculty_matches)
 
 
